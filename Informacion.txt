@@ -1,0 +1,2 @@
+El trabajo debe contar con el uso del modulo ADC, el de transmisión en serie, display y teclado
+Link de clase teorica sobre AD: https://drive.google.com/file/d/1m0CuEAg5N_XGyQn5EkkpFoGVpFZBmOWu/view
