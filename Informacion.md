@@ -1,89 +1,159 @@
-# Cuestiones a tener en cuenta:
-El trabajo debe contar con el uso del modulo ADC, el de transmisión en serie, display y teclado
+# Tareas a Realizar
 
----
+## 1. Codificación
 
-Aquí van **ideas sencillas y viables** para un trabajo práctico de *Electrónica Digital 2* usando el **PIC16F887**, programado en **assembler**, que involucren:
-* **ADC (Conversor Analógico-Digital)**
-* **Transmisión serie EUSART**
-* **Multiplexado de display de 7 segmentos o teclado matricial**
-* Fácil implementación en protoboard
+- [ ] Inicialización de puertos (entrada/salida según periférico)
+- [ ] Configuración y uso del ADC para leer el LM35
+- [ ] Conversión del valor ADC a temperatura en °C
+- [ ] Implementación del teclado matricial (lectura y decodificación)
+- [ ] Manejo del pulsador para activar/desactivar carga de referencia
+- [ ] Multiplexación y control de displays de 7 segmentos
+- [ ] Comparación de temperatura actual con referencia y control del LED
+- [ ] Configuración y uso de UART para envío serial de temperatura
+- [ ] Implementación de temporizador (Timer) para temporización de envío UART
+- [ ] Manejo de banderas (flags) para comunicación entre ISR y main_loop
 
-### 🟢 Opción 1: **Termómetro digital con envío serial**
-**Descripción:**
-* Usar un sensor de temperatura analógico como el **LM35** (0.01V/°C).
-* Leer la temperatura con el **ADC**.
-* Mostrar el valor en un **display de 3 dígitos multiplexado**.
-* Enviar la temperatura por **EUSART** cada cierto tiempo (por ejemplo, 1 vez por segundo).
+## 2. Configuración de módulos y puertos
 
-**Componentes:**
-* LM35
-* 3 Displays de 7 segmentos (ánodo común preferentemente)
-* PIC16F887
-* Conexión RS232-TTL o adaptador USB-Serial
+- [ ] Configurar puertos analógicos/digitales (ANSEL, TRISx)
+- [ ] Configurar ADC (canal, justificación, reloj, etc.)
+- [ ] Configurar puertos para teclado matricial (filas/columnas)
+- [ ] Configurar puertos para displays (segmentos y dígitos)
+- [ ] Configurar puerto para LED indicador
+- [ ] Configurar UART (baud rate, bits, sin paridad)
+- [ ] Configurar Timer (para ISR de 1 segundo)
+- [ ] Configurar interrupciones (Timer, INT/RBIF para pulsador)
 
-**Ventajas:**
-* Simple
-* Visualmente atractivo
-* Fácil de debuggear por terminal serial
+## 3. Estructura del main_loop principal
 
-### 🟢 Opción 2: **Voltímetro digital con visualización y salida serial**
-**Descripción:**
-* Leer una entrada analógica (0–5V) con el **ADC**.
-* Mostrar el valor en un **display de 7 segmentos** (por ejemplo, 0.00 a 5.00 V).
-* Enviar el valor por EUSART a la PC.
+- [ ] Esperar flag de carga de referencia (pulsador)
+- [ ] Leer teclado y armar valor de referencia
+- [ ] Leer LM35 por ADC periódicamente
+- [ ] Convertir valor ADC a temperatura
+- [ ] Mostrar temperatura en display multiplexado
+- [ ] Comparar temperatura actual con referencia y controlar LED
+- [ ] Si flag de envío UART está activo, enviar temperatura y limpiar flag
 
-**Componentes:**
-* Divisor resistivo para simular señales de entrada
-* 3 Displays de 7 segmentos
-* PIC16F887
-* UART a PC
+## 4. ISR necesarias
 
-**Extras:**
-* Puedes agregar una indicación de sobrevoltaje (por ejemplo, LED o mensaje serial)
+- [ ] ISR de Timer (cada 1 segundo): setear flag para envío UART
+- [ ] ISR de pulsador (INT/RBIF): setear flag para activar/desactivar carga de referencia
 
-### 🟢 Opción 3: **Controlador de luz con teclado matricial**
-**Descripción:**
-* Usar un **teclado matricial 4x4** para ingresar un número del 0 al 99.
-* Mostrar el número en un display de 2 dígitos.
-* Convertir el número a un voltaje proporcional (usando PWM y filtro RC).
-* Leer la luz con un **LDR** (opcional) por el ADC para retroalimentación.
-* Enviar el valor por **EUSART**.
+## 5. Partes del diagrama de flujo a realizar
 
-**Módulos usados:**
-* Teclado matricial (entrada)
-* Display 7 segmentos (salida)
-* ADC (LDR o potenciómetro)
-* EUSART (monitor)
+- [ ] Inicialización de módulos y variables
+- [ ] Espera de pulsador para carga de referencia
+- [ ] Rutina de ingreso de referencia por teclado
+- [ ] Bucle principal:
+    - Lectura de temperatura
+    - Conversión y visualización
+    - Comparación y control de LED
+    - Envío por UART (si corresponde)
 
-### 🟢 Opción 4: **Medidor de nivel con potenciómetro y transmisión**
-**Descripción:**
-* Usar un **potenciómetro** para simular un nivel (por ejemplo, de 0 a 100%).
-* Leer el valor con **ADC**.
-* Mostrar el nivel en un display 3 dígitos o en barras (tipo gráfico).
-* Enviar por **EUSART**: `Nivel = XX %`
+## 6. Implementación en Proteus
 
-**Extras:**
-* Podés usar LEDs para mostrar el nivel también.
-* Sencillo pero bien completo en cuanto a uso de periféricos.
-
-### 🟢 Opción 5: **Sistema de clave digital con ingreso por teclado y envío por UART**
-**Descripción:**
-* Usar un **teclado matricial** para ingresar una clave.
-* Mostrar los dígitos en un display mientras se ingresan (opcionalmente ocultos).
-* Verificar la clave y enviar un mensaje de “Acceso Correcto” o “Incorrecto” por **EUSART**.
-* Podés usar ADC como verificación extra (e.g., nivel de voltaje para activar el sistema).
-
-### Consejos para implementación:
-* Usá delays simples y control de refresco en display para multiplexado.
-* Iniciá el EUSART en modo asincrónico, 9600 baudios, 8N1.
-* Usá un solo canal del ADC al comienzo.
-* Para el ensamblador, trabajá por módulos: ADC.asm, display.asm, serial.asm, etc.
-* No uses interrupciones al inicio, hacelo todo en polling si querés mantenerlo simple.
+- [ ] Montar el microcontrolador PIC16F887
+- [ ] Conectar sensor LM35 al canal AN0
+- [ ] Conectar teclado matricial a los puertos definidos
+- [ ] Conectar displays de 7 segmentos (2 o 3 dígitos) a los puertos definidos
+- [ ] Conectar LED indicador a la salida correspondiente
+- [ ] Conectar pulsador a la entrada correspondiente
+- [ ] Conectar módulo UART a un virtual terminal (RS232-TTL)
+- [ ] Alimentación y conexiones de masa
 
 ---
 
 # Clases:
 * Clase teórica sobre AD: https://drive.google.com/file/d/1m0CuEAg5N_XGyQn5EkkpFoGVpFZBmOWu/view
 * Clase Teórica sobre comunicación: https://drive.google.com/file/d/1-OzEk3Gd9JGqM7VAiljeCQ1kqgmKCDBX/view
+
+--- 
+
+## Extra: 
+División por bloques
+1. Lectura de temperatura (ADC + LM35): Canal AN0 (RA0) conectado al LM35. ADC configurado a 10 bits. Convertir el valor leído a °C:
+2. Ingreso de temperatura de referencia: Teclado matricial 4x4 conectado a PORTB y PORTD. Pulsador en otra entrada (ej. RA1) para indicar: Presionado 1ra vez: comienza ingreso. Presionado 2da vez: guarda temperatura. Digitos ingresados se muestran en display y se guardan en una variable temp_ref.
+3. Display de 7 segmentos multiplexado (3 dígitos): Segmentos conectados a PORTC. Dígitos controlados por PORTA o PORTD. Refrescar en bucle con retardo corto (~5–10 ms).
+4. UART (TX por RC6): Configurar EUSART en modo asincrónico. 9600 baudios, 8 bits, sin paridad. Enviar string con temperatura cada 1 segundo, por ejemplo: "Temp: 27°C\r\n"
+5. Comparador con LED: Comparar temp_actual con temp_ref. Si temp_actual > temp_ref, encender LED (ej. en RA2).
+
+---
+
+⚙️ Flujo del programa principal
+
+Inicio
+│
+├─ Inicializar módulos (ADC, UART, puertos, teclado, display)
+│
+├─ Esperar pulsador para carga de temperatura referencia
+│   └─ Leer teclado y armar valor de 2 o 3 dígitos
+│   └─ Guardar valor en variable temp_ref
+│
+└─ Bucle principal:
+    ├─ Leer LM35 por ADC
+    ├─ Convertir a °C y guardar en temp_actual
+    ├─ Mostrar en display multiplexado
+    ├─ Enviar valor por UART cada 1 segundo
+    └─ Si temp_actual > temp_ref, encender LED
+
+---
+
+Excelente pregunta. Una buena división entre interrupciones y ciclo principal (main_loop) hace tu código más ordenado, eficiente y fácil de mantener.
+
+🧠 Criterio general
+
+Por interrupciones: tareas críticas de tiempo o eventos esporádicos, que no deberían depender del polling del main_loop. En el main_loop: tareas que pueden ejecutarse en forma continua, y que pueden tolerar cierto retardo o ejecución repetitiva.
+
+---
+
+🛎️ Interrupciones recomendadas
+
+✅ 1. Timer (Timer1 o Timer0)
+
+Para: generar interrupción cada 1 segundo
+Uso: enviar temperatura por UART
+Motivo: evita usar retardos largos en el loop
+
+; En ISR
+    bsf FLAG_ENVIO_UART  ; setea flag para que el main envíe por UART
+
+---
+
+✅ 2. Interrupción por cambio (RBIF) o externa (INT)
+
+Para: detectar el pulsador que inicia o finaliza la carga por teclado.
+Motivo: evita tener que escanear el pulsador todo el tiempo en el loop.
+
+; En ISR
+    btfss BOTON, 0
+    goto CONTINUAR
+    bsf FLAG_CARGA_TREF
+
+---
+
+🔁 Tareas en el main_loop
+
+🔹 1. Lectura del LM35: Hacer polling periódico del ADC. Lo ideal: leerlo ~10 veces por segundo o menos.
+
+🔹 2. Escaneo de teclado (cuando está activo): Escanear columnas y filas solo cuando el flag de carga de temperatura esté activo.
+
+🔹 3. Conversión ADC a temperatura: División por constantes (puede hacerse en polling).
+
+🔹 4. Mostrar en display 7 segmentos: Actualización rápida y constante (cada ~5ms). Ciclar entre los 3 dígitos en el main.
+
+🔹 5. Comparar con temperatura de referencia: Se hace después de cada lectura de temperatura.
+
+🔹 6. Enviar por UART (si flag está activo): En el main: si FLAG_ENVIO_UART = 1, hacer el envío y limpiar el flag.
+
+🧱 Resumen de división
+
+Tarea	¿Dónde se hace?	Motivo
+
+Envío periódico por UART	Interrupción (Timer)	Preciso y no bloqueante
+Lectura de LM35 (ADC)	main_loop	Repetitivo y no urgente
+Carga de temperatura por teclado	main_loop	Solo cuando está activo
+Activación del modo carga	Interrupción (INT/RBIF)	Evento externo poco frecuente
+Visualización en display	main_loop	Refresco rápido necesario
+Comparación con temp. referencia	main_loop	Luego de cada lectura ADC
+
 
