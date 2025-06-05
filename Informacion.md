@@ -1,3 +1,22 @@
+# Flujo del programa
+
+## MAIN
+Tendremos una variable (INGRESAR - bit 0) que nos indicara si se esta por ingresar una tecla, la cual limpiaremos al principio del programa.
+Luego utilizaremos el PORTD para la lectura del teclado.
+El pin RB0 tiene que estar configurado como entrada digital (ademas como Interrupcion general del PIC).
+El PORTD sera seteado como salida para utilizarlo como bus de datos a los displays y el PORTB (RB1 y RB2) sera utilizado para la multiplexacion de los dos O SEA COMO SALIDAS
+Configuracion del Oscilador interno para bajar la frecuencia de intstrucion y poder contar 1 [s] con el TMR1
+Configuramos el ADC y el modulo UART
+Congiguramos el TMR1 y realizamos su limpieza para que interrumpa cada 1 [s] y avisarnos para realizar la transmicion
+Configuramos el pin RB3 para que sea el que encienda el led que nos indica cuando la temperatura pasa cierto nivel.
+configuraciones del registro INTCON - PIE1 - OPTION_REG
+
+## MAIN_LOPP
+
+## ISR
+
+
+
 # Tareas a Realizar
 
 ## 1. Codificación
