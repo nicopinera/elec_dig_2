@@ -32,6 +32,7 @@ MAIN:
     CLRF        PORTA
     CLRF        PORTD
     CLRF        PORTB
+    BSF         PORTB,RB0   ;INICIO CON RB0 EN 1
     BANKSEL     ANSELH
     BCF         ANSELH,ANS12 ;RB0 COMO DIGITAL
 
