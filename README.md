@@ -92,5 +92,5 @@ A continuación se detallan los comandos más comunes para utilizar git:
 - Para descargar o bajar los cambios del repositorio en github:  
   `git pull origin master`
 
-[![Ask DeepWiki](https://deepwiki.com/nicopinera/elec_dig_2))](https://deepwiki.com/nicopinera/elec_dig_2)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/nicopinera/elec_dig_2)
 
