@@ -129,17 +129,13 @@ TECLADO:
 	BTFSS       STATUS, C	    ; Indice < = que 15?
 	RETURN          	        ; no -> indice no válido
 	MOVF        INDICE, W	    ; si -> buscar ASCII en tabla TECLAS
-	CALL        TECLAS
-
-    ; --- NUEVO FLUJO PARA CARGA DE DOS DIGITOS ---
-    ; La tabla TECLAS ya devuelve el valor decimal (0-9)
+	CALL        TECLAS          ; La tabla TECLAS ya devuelve el valor decimal (0-9)
     MOVWF   WREG_TEMP    ; WREG_TEMP = valor numérico de la tecla
-
     BTFSS   INGRESAR, 1  ; ¿Ya se ingresó el primer dígito? (usamos INGRESAR,1 como flag)
     GOTO    TECLADO_PRIMER_DIGITO
 
+; Segundo dígito: combinar con el primero y guardar en TEMPREF
 TECLADO_SEGUNDO_DIGITO:
-    ; Segundo dígito: combinar con el primero y guardar en TEMPREF
     MOVF    DIG1, W
     MOVWF   TEMPREF
     RLF     TEMPREF, F   ; TEMPREF = DIG1 * 2
@@ -166,16 +162,14 @@ TECLADO_SEGUNDO_DIGITO:
     BCF     INGRESAR, 1
     RETURN
 
+; Guardar primer dígito y setear flag para esperar el segundo
 TECLADO_PRIMER_DIGITO:
-    ; Guardar primer dígito y setear flag para esperar el segundo
     MOVF    WREG_TEMP, W
     MOVWF   DIG1
     BSF     INGRESAR, 1   ; Seteamos flag de primer dígito ingresado
     RETURN
 
-; --- FIN MODIFICACION TECLADO ---
-
-; ------- ESCANEAR_TECLAS --------
+; ESCANEAR_TECLAS
 ESCANEAR_TECLAS:
     CLRF    COL	        ; col 1
     MOVLW   0x01	    ; RD0 activa (columna 1)
@@ -199,8 +193,8 @@ ESCANEAR_FILAS:		    ; detectar fila
     MOVWF   INDICE
     RETURN
 
+; Busca cuál fila está activa
 DETECTA_FILA:
-    ; Busca cuál fila está activa
     MOVF    PORTD, W
     ANDLW   0xF0
     SWAPF   WREG, W     ; filas ahora en bits bajos
@@ -241,7 +235,7 @@ F4:
     MOVWF   INDICE
     RETURN
 
-; ------- TABLA DE TECLAS (devuelve valor decimal 0-9) -------
+;TABLA DE TECLAS (devuelve valor decimal 0-9)
 TECLAS:
     ADDWF   PCL, F
     RETLW   0x00    ; 0
@@ -255,7 +249,7 @@ TECLAS:
     RETLW   0x08    ; 8
     RETLW   0x09    ; 9
 
-    ;RUTINAS DE RETARDO
+;RUTINAS DE RETARDO
 RETARDO_20ms:
     MOVLW 0x14
     MOVWF CONT1
@@ -289,37 +283,36 @@ ISR:
     GOTO    ISR_TRANSMICION 
     GOTO    SALIR
 
-;   RUTINA DE RB0
+;RUTINA DE RB0
 ISR_RB0
     BCF     INTCON,INTF
     COMF    INGRESAR,F  ;SETTEO EL BIT 0
     GOTO    SALIR
 
+;RUTINA DEL TMR1
 ISR_TMR1:
     BCF     PIR1,TMR1F
     BSF     FLAG_1SEG,0
     GOTO    SALIR
-;   RUTINA DE INTERRUPCION ADC
+
+;RUTINA DE INTERRUPCION ADC
 ISR_ADC:
     NOP
     BCF     PIR1,ADIF   
     GOTO    SALIR
 
-;   RUTINA DE INTERRUPCION RECEPCION EUSART
-
-
+;RUTINA DE INTERRUPCION RECEPCION EUSART
 ISR_TRANSMICION:
     NOP
     BCF     PIR1,TXIF
     GOTO    SALIR
 
-
-SALIR    ;RECUPERACION DE CONTEXTO, LIMPIEZA DE BANDERA Y SALIDA
+;RECUPERACION DE CONTEXTO, LIMPIEZA DE BANDERA Y SALIDA
+SALIR:    
     SWAPF   STATUST,W
     MOVWF   STATUST
     SWAPF   WTEMP,F
     SWAPF   WTEMP,W
     RETFIE
-
     
     END
