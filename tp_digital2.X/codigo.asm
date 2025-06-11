@@ -29,7 +29,10 @@ DIG1
 WREG_TEMP   
 
 ; <--- variable temporal para cálculos
-WREG_TEMP2  
+WREG_TEMP2
+FLAG_1SEG  ; bandera activada por TMR1 cada 1 segundo
+FLAG_ADC_OK ; bandera que indica que el ADC terminó
+FLAG_TX ; bandera para indicar que hay que transmitir
 ENDC
 
 WTEMP   EQU 0X70
@@ -266,7 +269,7 @@ RETARDO2:
     DECFSZ CONT1, 1
     GOTO RETARDO1
     RETURN
-    
+
 ; RUTINA DE SERVICIO A LA INTERRUPCION
 ISR:    
     ;GUARDADO DE CONTEXTO
@@ -277,7 +280,8 @@ ISR:
     BANKSEL PIR1
     BTFSC   INTCON,INTF
     GOTO    ISR_RB0
-
+    BTFSC   PIR1,TMR1F
+    GOTO    ISR_TMR1
     ;TESTEO DE BANDERAS LEVANTADAS
     BTFSC   PIR1,ADIF   ;BANDERA DEL ADC
     GOTO    ISR_ADC
@@ -291,7 +295,10 @@ ISR_RB0
     COMF    INGRESAR,F  ;SETTEO EL BIT 0
     GOTO    SALIR
 
-
+ISR_TMR1:
+    BCF     PIR1,TMR1F
+    BSF     FLAG_1SEG,0
+    GOTO    SALIR
 ;   RUTINA DE INTERRUPCION ADC
 ISR_ADC:
     NOP
@@ -311,9 +318,8 @@ SALIR    ;RECUPERACION DE CONTEXTO, LIMPIEZA DE BANDERA Y SALIDA
     SWAPF   STATUST,W
     MOVWF   STATUST
     SWAPF   WTEMP,F
-    SWAPF   WTEM,W
+    SWAPF   WTEMP,W
     RETFIE
 
-    
     
     END
