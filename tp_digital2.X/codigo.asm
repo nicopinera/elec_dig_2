@@ -158,7 +158,7 @@ TECLADO:                    ; SUBRUTINA DE TECLADO
 
     BTFSS       INGRESAR, 1     ; ¿Ya se ingresó el primer dígito? (usamos INGRESAR,1 como flag)
     ; Si NO se ingresó el primer dígito, lo guardo como decena y retorno
-    CALL        TECLADO_PRIMER_DIGITO
+    GOTO        TECLADO_PRIMER_DIGITO
     ; Si YA se ingresó el primer dígito, este es el segundo (unidad)
     ; Combinar decena y unidad
 
@@ -194,7 +194,7 @@ TECLADO_PRIMER_DIGITO:
     MOVF    WREG_TEMP, W
     MOVWF   DIG1
     BSF     INGRESAR, 1   ; Seteamos flag de primer dígito ingresado
-    RETURN
+    GOTO	TECLADO
     ; Cuando se ingresa el primer dígito, se guarda como decena y se activa la bandera para esperar el segundo dígito.
 
 ESCANEAR_TECLAS:        ; ESCANEAR TECLAS
