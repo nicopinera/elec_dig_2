@@ -3,10 +3,12 @@ LIST	p=16f887
 
     ; Variables externas
 CBLOCK 0X20
-;VARIABLE QUE NOS DICE SI ESTAMOS ESPERANDO UN NUMERO -- B0 = 1 = ESPERANDO - B0 = 0 = NO ESPERANDO
+; Nos indica si estamos esperando un numero y si se ingreso el primer digito
+; B0 = 1 = Esperando - B0 = 0 = No Esperando
+; B1 = 0 = No se ingreso el primer digito - B1 = 1 = Se ingreso el primer digito
 INGRESAR
 
-;TEMPERATURA DE REFERENCIA
+;Temperatura de Referencia
 TEMPREF
 
 ;Indice de tecla pulsada (0?15)
@@ -30,57 +32,47 @@ FLAG_TX     ; Bandera para indicar que hay que transmitir
 TEMPACTUAL  ;Temperatura actual
 ENDC
 
+; Para guardar contexto
 WTEMP   EQU 0X70
 STATUST EQU 0X71
-
+; --------------------------------------------
     ORG     0X0
     GOTO    MAIN    ;Parte principal
     ; El programa comienza en la dirección 0 y salta a la rutina principal MAIN.
-    
+; --------------------------------------------
     ORG     0X04
     GOTO    ISR     ; Direccion de interrupciones
     ; Si ocurre una interrupción, el programa salta a la rutina ISR.
-
+; --------------------------------------------
     ORG 0X05
 MAIN:
-    CLRF        INGRESAR     ;LIMPIO BANDERA DE INGRESAR NUMERO
+    CLRF        INGRESAR
     CLRF        TEMPREF
     CLRF        FLAG_1SEG
     CLRF        FLAG_ADC_OK
     CLRF        FLAG_TX
     ; Se inicializan todas las banderas y variables de control en cero.
 
-    ;PUERTOS
+    ;Configuracion de Puertos
     BANKSEL     TRISD
     MOVLW       B'11110000' ; RD7-RD4 Entradas (filas), RD3-RD0 Filas (columnas)
     MOVWF       TRISD
-    CLRF        PORTD        ; Asegura que columnas inician en 0
-    ; Configura el puerto D para el teclado matricial: las filas como entradas y las columnas como salidas.
-
-    BANKSEL     TRISB
-    MOVLW       B'00000001' ; RB0 Entrada del pulsador - RB1 y RB2 habilitadores de display
+    MOVLW       B'00000001' ; Configura el puerto B: RBO para el pulsador y RB1 -RB2 los habilitadores del display.
     MOVWF       TRISB
+    BSF         TRISE,RE0   
+    BCF         TRISE,RE1   ; Configura el puerto E: RE0 como entrada analógica para el sensor y RE1 como salida para el LED.
+    CLRF        TRISA       ; Configura el puerto A como salida para enviar datos al display.
+    BANKSEL     PORTA
+    CLRF        PORTD        ; Asegura que columnas inician en 0
     CLRF        PORTB
-    ; Configura el puerto B para el pulsador y los habilitadores del display.
-
-    BANKSEL     TRISE
-    BSF         TRISE,RE0   ;RE0 Entrada analogica AN5 - donde entra la señal del sensor
-    BCF         TRISE,RE1   ;RE1 Salida del led si esta pasando la temperatura de referencia
     CLRF        PORTE
-    ; Configura el puerto E: RE0 como entrada analógica para el sensor y RE1 como salida para el LED.
-
-    BANKSEL     TRISA
-    CLRF        TRISA        ; PORTA como bus de datos para display
     CLRF        PORTA
-    ; Configura el puerto A como salida para enviar datos al display.
-
-    BANKSEL     ANSELH
-    BCF         ANSELH,ANS12 ; RB0 como entrada digital
-    ; Configura RB0 como entrada digital (no analógica).
-
-    ;OSCILADOR INTERNO
+    BANKSEL     ANSELH      ; Configura RB0 como entrada digital (no analógica).
+    BCF         ANSELH,ANS12
+    
+    ;Configuracion de Oscilador Interno
     BANKSEL     OSCCON
-    MOVLW       B'01011000'  ; Oscilador interno de 2[MHz]
+    MOVLW       B'01011000'
     MOVWF       OSCCON
     ; Configura el oscilador interno del microcontrolador a 2 MHz.
 
@@ -90,7 +82,7 @@ MAIN:
     ;TRANSMICION
     ; Aquí se debe agregar la configuración de la transmisión si se utiliza.
 
-    ;TMR1
+    ;Timer 1
     BANKSEL     T1CON
     CLRF        TMR1L
     CLRF        TMR1H
@@ -98,7 +90,7 @@ MAIN:
     MOVWF       T1CON
     ; Inicializa el temporizador TMR1 y lo configura.
 
-    ;INTERRUPCIONES
+    ;Configuracion de Interrupciones
     BANKSEL     INTCON 
     MOVLW       B'11010000'         ; Habilito GIE - PEIE - INTE y limpio bandera INTF
     MOVWF       INTCON 
@@ -106,35 +98,29 @@ MAIN:
     BCF         PIR1,TXIF
     BCF         PIR1,TMR1IF
     BANKSEL     OPTION_REG
-    BCF         OPTION_REG,INTEDG   ; FLANCO DE BAJADA PARA INT - PULSADOR EN PULL-UP
-    MOVLW       B'01010001'         ; HABILITO INTERRUPCION POR ADC - TRANSMICION - TMR1
+    BCF         OPTION_REG,INTEDG   ; Flanco de Bajada para INT, el pulsador esta en 1 siempre
+    MOVLW       B'01010001'         ; Habilito interrupciones por ADC - TX - TMR1
     MOVWF       PIE1
     ; Habilita las interrupciones globales y periféricas, y configura las fuentes de interrupción.
 
-    ;ACTIVADO DEL TMR1
+    ;Activo TMR1
     BANKSEL     T1CON
-    BSF         T1CON,0             ; ACTIVO EL TMR1
-    ; Activa el temporizador TMR1.
-
-MAIN_LOOP:                          ; LOOP PRINCIPAL
-    BTFSC       INGRESAR,0          ;SI ESTA EN 0 NO ESPERO UNA TECLA, SI ESTA EN 1 SI
-    CALL        TECLADO
-    ; Si se está esperando el ingreso de un número, llama a la rutina de teclado.
-
+    BSF         T1CON,0             
+; --------------------------------------------
+MAIN_LOOP:                          ; Loop Principal
+    BTFSC       INGRESAR,0          ; Si esta en 0 no espero una tecla
+    CALL        TECLADO             ; Si se está esperando el ingreso de un número, llama a la rutina de teclado.
+    
     ;MULTIPLEXADO DISPLAY
     ; Aquí se debe agregar el código para multiplexar el display.
-
-    ;Comparacion de temperatura actual con la temperatura de referencia para prender el led
-    MOVF        TEMPREF,W
+    
+    MOVF        TEMPREF,W           ; Compara la temperatura actual con la de referencia y enciende el LED si corresponde.
     SUBWF       TEMPACTUAL,W
     BTFSC       STATUS,Z
-    BSF         PORTE,RE1           ;Prendo el led si la temperatura es mayor
-    ; Compara la temperatura actual con la de referencia y enciende el LED si corresponde.
-
-    GOTO        MAIN_LOOP
-    ; Vuelve al inicio del loop principal.
-
-TECLADO:                    ; SUBRUTINA DE TECLADO
+    BSF         PORTE,RE1           ; Prendo el led si la temperatura es mayor
+    GOTO        MAIN_LOOP           ; Vuelve al inicio del loop principal.
+; --------------------------------------------
+TECLADO:                    ; Subrutina de Teclado
     BANKSEL     PORTD
     MOVLW       0x0F	    ; pongo 1 todas las columnas
 	MOVWF       PORTD
@@ -155,13 +141,11 @@ TECLADO:                    ; SUBRUTINA DE TECLADO
 	MOVF        INDICE, W	    ; si -> buscar valor en tabla TECLAS
 	CALL        TECLAS          ; La tabla TECLAS ya devuelve el valor decimal (0-9)
     MOVWF       WREG_TEMP       ; WREG_TEMP = valor numérico de la tecla
-
-    BTFSS       INGRESAR, 1     ; ¿Ya se ingresó el primer dígito? (usamos INGRESAR,1 como flag)
-    ; Si NO se ingresó el primer dígito, lo guardo como decena y retorno
+    BTFSS       INGRESAR, 1     ; ¿Ya se ingresó el primer dígito? (usamos INGRESAR,1 como flag) - Si NO se ingresó el primer dígito, lo guardo como decena y retorno
     GOTO        TECLADO_PRIMER_DIGITO
     ; Si YA se ingresó el primer dígito, este es el segundo (unidad)
     ; Combinar decena y unidad
-
+; --------------------------------------------
 TECLADO_SEGUNDO_DIGITO:
     MOVF    DIG1, W            ; decena
     MOVWF   TEMPREF
@@ -189,7 +173,7 @@ TECLADO_SEGUNDO_DIGITO:
     BCF     INGRESAR, 1
     RETURN
     ; Cuando se ingresa el segundo dígito, se calcula el valor final y se limpia la bandera de ingreso.
-
+; --------------------------------------------
 TECLADO_PRIMER_DIGITO:
     MOVF    WREG_TEMP, W
     MOVWF   DIG1
@@ -197,157 +181,150 @@ TECLADO_PRIMER_DIGITO:
     GOTO	TECLADO
     ; Cuando se ingresa el primer dígito, se guarda como decena y se activa la bandera para esperar el segundo dígito.
 
-ESCANEAR_TECLAS:        ; ESCANEAR TECLAS
-    CLRF    COL	        ; col 1
-    MOVLW   0x01	    ; RD0 activa (columna 1)
-    MOVWF   COLMASK	    ; en alto
-ESCANEAR_FILAS:		    ; detectar fila
-    MOVF    COLMASK, W
-    MOVWF   PORTD       ; activa una columna a la vez
+;-----------------------------------------------------------
+; ESCANEAR_TECLAS: Escanea el teclado 4x4 y devuelve en INDICE el índice físico (0-15)
+; Si no hay tecla válida, INDICE = 0xFF
+;-----------------------------------------------------------
+ESCANEAR_TECLAS:
+    CLRF    COL             ; Inicializa columna en 0
+    MOVLW   0x01
+    MOVWF   COLMASK         ; Máscara para seleccionar columna (empieza en RD0)
+SCAN_COL_LOOP:
+    MOVLW   0x0F            ; Todas las columnas en 1
+    MOVWF   PORTD
+    COMF    COLMASK, W      ; Invierte máscara: columna activa en 0
+    ANDLW   0x0F            ; Solo columnas (RD3-RD0)
+    IORLW   0xF0            ; Mantiene filas (RD7-RD4) en 1
+    MOVWF   PORTD           ; Aplica a PORTD: una columna en 0, el resto en 1
+    NOP                     ; Pequeño retardo para estabilizar
+    NOP
     MOVF    PORTD, W
-    ANDLW   0xF0        ; enmascara filas
-    BTFSS   STATUS, Z
-    GOTO    DETECTA_FILA
-    INCF    COL, F
-    RLF     COLMASK, F  ; siguiente columna (RD0->RD1->RD2->RD3)
-    MOVLW   0x04
-    SUBWF   COL, W
-    BTFSS   STATUS, Z   ; ¿todas las columnas?
-    GOTO    ESCANEAR_FILAS
-    MOVLW   0xFF        ; no se detectó tecla
-    MOVWF   INDICE
-    RETURN
-    ; Escanea el teclado matricial activando una columna a la vez y detectando si alguna fila está activa.
+    ANDLW   0xF0            ; Enmascara filas (RD7-RD4)
+    XORLW   0xF0            ; Si todas filas en 1, resultado será 0 (ninguna tecla)
+    BTFSC   STATUS, Z
+    GOTO    NEXT_COL        ; Si no hay tecla en esta columna, pasa a la siguiente
 
-; Busca cuál fila está activa
-DETECTA_FILA:
+    ; Alguna fila está en 0, detectar cuál
     MOVF    PORTD, W
     ANDLW   0xF0
-    SWAPF   WREG, W     ; filas ahora en bits bajos
-    MOVWF   WREG_TEMP
-    CLRF    INDICE
+    XORLW   0xF0            ; Invierte filas: la presionada será 1
+    MOVWF   WREG_TEMP       ; WREG_TEMP = bits de fila activa
+    CLRF    INDICE          ; INDICE = número de fila (0-3)
+    MOVLW   0x01
+    MOVWF   WREG_TEMP2      ; WREG_TEMP2 = máscara de fila a chequear
+
+SCAN_ROW_LOOP:
+    MOVF    WREG_TEMP, W
+    ANDWF   WREG_TEMP2, W
+    BTFSS   STATUS, Z
+    GOTO    FOUND_ROW       ; Si bit de fila está en 1, es la fila activa
+    INCF    INDICE, F
+    RLF     WREG_TEMP2, F   ; Siguiente bit de fila
     MOVLW   0x10
-    BTFSS   WREG_TEMP, 4
-    GOTO    F1
-    INCF    INDICE, F
-F1:
-    MOVLW   0x20
-    BTFSS   WREG_TEMP, 5
-    GOTO    F2
-    INCF    INDICE, F
-F2:
-    MOVLW   0x40
-    BTFSS   WREG_TEMP, 6
-    GOTO    F3
-    INCF    INDICE, F
-F3:
-    MOVLW   0x80
-    BTFSS   WREG_TEMP, 7
-    GOTO    F4
-    INCF    INDICE, F
-F4:
-    ; INDICE = fila (0-3)
-    ; Ahora calcula el índice final: INDICE = fila + (columna*4)
-    MOVF    COL, W
-    MOVWF   WREG_TEMP
-    RLF     WREG_TEMP, F   ; *2
-    RLF     WREG_TEMP, F   ; *4
-    ADDWF   INDICE, F
-    ; Si el índice es mayor a 9, no es válido
-    MOVF    INDICE, W
-    SUBLW   0x09
+    SUBWF   WREG_TEMP2, W
     BTFSS   STATUS, C
-    MOVLW   0xFF
+    GOTO    NEXT_COL        ; Si ya chequeó las 4 filas, pasa a la siguiente columna
+    GOTO    SCAN_ROW_LOOP
+
+FOUND_ROW:
+    ; INDICE = número de fila (0-3)
+    ; Calcula índice físico: INDICE = fila*4 + columna
+    MOVF    INDICE, W
+    MOVWF   WREG_TEMP2
+    RLF     WREG_TEMP2, F   ; *2
+    RLF     WREG_TEMP2, F   ; *4
+    MOVF    COL, W
+    ADDWF   WREG_TEMP2, W   ; W = fila*4 + columna
+    MOVWF   INDICE          ; Guarda índice físico en INDICE
+    RETURN
+
+NEXT_COL:
+    INCF    COL, F
+    MOVLW   0x04
+    SUBWF   COL, W
+    BTFSS   STATUS, Z       ; ¿Ya se probaron las 4 columnas?
+    RLF     COLMASK, F      ; Siguiente columna (RD0->RD1->RD2->RD3)
+    GOTO    SCAN_COL_LOOP
+    MOVLW   0xFF            ; No se detectó tecla
     MOVWF   INDICE
     RETURN
-    ; Determina qué fila está activa y calcula el índice de la tecla presionada.
 
-;TABLA DE TECLAS (devuelve valor decimal 0-9)
+;-----------------------------------------------------------
+; TECLAS: Traduce el índice físico (0-15) a valor numérico (0-9)
+; Si no es un número, devuelve 0xFF
+;-----------------------------------------------------------
 TECLAS:
     ADDWF   PCL, F
-    RETLW   0x00    ; 0
-    RETLW   0x01    ; 1
-    RETLW   0x02    ; 2
-    RETLW   0x03    ; 3
-    RETLW   0x04    ; 4
-    RETLW   0x05    ; 5
-    RETLW   0x06    ; 6
-    RETLW   0x07    ; 7
-    RETLW   0x08    ; 8
-    RETLW   0x09    ; 9
-    ; Esta tabla traduce el índice de la tecla presionada al valor decimal correspondiente.
-
-;RUTINAS DE RETARDO
-RETARDO_20ms:
-    MOVLW 0x14
-    MOVWF CONT1
-RETARDO1:
-    MOVLW 0xFA
-    MOVWF CONT0
-RETARDO2:
-    NOP
-    DECFSZ CONT0, 1
-    GOTO RETARDO2
-    DECFSZ CONT1, 1
-    GOTO RETARDO1
+    RETLW   0xFF    ; 0: *
+    RETLW   0x00    ; 1: 0
+    RETLW   0xFF    ; 2: #
+    RETLW   0xFF    ; 3: D
+    RETLW   0x07    ; 4: 7
+    RETLW   0x08    ; 5: 8
+    RETLW   0x09    ; 6: 9
+    RETLW   0xFF    ; 7: C
+    RETLW   0x04    ; 8: 4
+    RETLW   0x05    ; 9: 5
+    RETLW   0x06    ; 10: 6
+    RETLW   0xFF    ; 11: B
+    RETLW   0x01    ; 12: 1
+    RETLW   0x02    ; 13: 2
+    RETLW   0x03    ; 14: 3
+    RETLW   0xFF    ; 15: A
+; --------------------------------------------
+RETARDO_20ms:           ; Rutina de retardo aproximado de 20 ms usando bucles anidados.
+    MOVLW       .10
+    MOVWF       CONT0
+L2  MOVLW       .250
+    MOVWF       CONT1
+L1  NOP             
+    DECFSZ      CONT1, 1
+    GOTO        L1
+    DECFSZ      CONT0,1
+    GOTO        L2
     RETURN
-    ; Rutina de retardo aproximado de 20 ms usando bucles anidados.
-
-; RUTINA DE SERVICIO A LA INTERRUPCION
-ISR:    
-    ;GUARDADO DE CONTEXTO
-    MOVWF   WTEMP
+; --------------------------------------------
+ISR:                    ; Rutina principal de atención a interrupciones: verifica la fuente y salta a la rutina correspondiente.
+    MOVWF   WTEMP       ;Guardo el contexto previo a la interrupcion
     SWAPF   STATUS,W
     MOVWF   STATUST
-
-    BANKSEL PIR1
-    BTFSC   INTCON,INTF
+    BANKSEL PIR1        ; Testeo de banderas
+    BTFSC   INTCON,INTF ; Bandera del Pulsador
     GOTO    ISR_RB0
-    BTFSC   PIR1,TMR1F
+    BTFSC   PIR1,TMR1F  ; Bandera del TMR1
     GOTO    ISR_TMR1
-    ;TESTEO DE BANDERAS LEVANTADAS
-    BTFSC   PIR1,ADIF   ;BANDERA DEL ADC
+    BTFSC   PIR1,ADIF   ; Bandera del ADC
     GOTO    ISR_ADC
-    BTFSC   PIR1,TXIF   ;BANDERA DE TRANSMICION MODULO EUSART
+    BTFSC   PIR1,TXIF   ;Bandera de Tx
     GOTO    ISR_TRANSMICION 
     GOTO    SALIR
-    ; Rutina principal de atención a interrupciones: verifica la fuente y salta a la rutina correspondiente.
-
-;RUTINA DE RB0
-ISR_RB0
+; --------------------------------------------
+ISR_RB0     ; Atiende la interrupción por el pulsador en RB0 y conmuta la bandera de ingreso.
     BCF     INTCON,INTF
-    COMF    INGRESAR,F  ;SETTEO EL BIT 0
+    MOVLW   0X01
+    XORWF   INGRESAR,INGRASAR   ;si estaba en 1 pasa a 0, si estaba en 0 pasa a 1
     GOTO    SALIR
-    ; Atiende la interrupción por el pulsador en RB0 y conmuta la bandera de ingreso.
-
-;RUTINA DEL TMR1
-ISR_TMR1:
+; --------------------------------------------
+ISR_TMR1:   ; Atiende la interrupción del temporizador 1 y activa la bandera de 1 segundo.
     BCF     PIR1,TMR1F
     BSF     FLAG_1SEG,0
     GOTO    SALIR
-    ; Atiende la interrupción del temporizador 1 y activa la bandera de 1 segundo.
-
-;RUTINA DE INTERRUPCION ADC
-ISR_ADC:
+; --------------------------------------------
+ISR_ADC:    ; Atiende la interrupción del ADC y limpia la bandera correspondiente.
     NOP
     BCF     PIR1,ADIF   
     GOTO    SALIR
-    ; Atiende la interrupción del ADC y limpia la bandera correspondiente.
-
-;RUTINA DE INTERRUPCION RECEPCION EUSART
-ISR_TRANSMICION:
+; --------------------------------------------
+ISR_TRANSMICION:    ; Atiende la interrupción de transmisión y limpia la bandera correspondiente.
     NOP
     BCF     PIR1,TXIF
     GOTO    SALIR
-    ; Atiende la interrupción de transmisión y limpia la bandera correspondiente.
-
-;RECUPERACION DE CONTEXTO, LIMPIEZA DE BANDERA Y SALIDA
-SALIR:    
+; --------------------------------------------
+SALIR:    ; Restaura el contexto y retorna de la interrupción.
     SWAPF   STATUST,W
     MOVWF   STATUST
     SWAPF   WTEMP,F
     SWAPF   WTEMP,W
     RETFIE
-    ; Restaura el contexto y retorna de la interrupción.
-    
+; --------------------------------------------
     END
