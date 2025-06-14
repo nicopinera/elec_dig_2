@@ -75,12 +75,28 @@ MAIN:
     MOVLW       B'01011000'
     MOVWF       OSCCON
     ; Configura el oscilador interno del microcontrolador a 2 MHz.
+;-------------------------------------------------------------------
+    ;---------CONFIGURACION ADC--------------
+    BANKSEL ADCON0
+    MOVLW   B'00010101'   ; Canal AN5 (RE0), ADC off por ahora
+    MOVWF   ADCON0
+    BANKSEL ADCON1
+    MOVLW   B'00000000'   ; Justificado a la izquierda, Vref = VDD-VSS
+    MOVWF   ADCON1
 
-    ;ADC
-    ; Aquí se debe agregar la configuración del ADC si se utiliza.
+    ;----------CONFIGURACION TRANSMISION----------
+    BANKSEL TXSTA
+    MOVLW   B'00100100'   ; TXEN=1, BRGH=1 (alta velocidad)
+    MOVWF   TXSTA
 
-    ;TRANSMICION
-    ; Aquí se debe agregar la configuración de la transmisión si se utiliza.
+    BANKSEL RCSTA
+    MOVLW   B'10000000'   ; SPEN=1 habilita transmisor
+    MOVWF   RCSTA
+
+    BANKSEL SPBRG
+    MOVLW   .12          ; Baud Rate 9600 con Fosc = 2MHz (BRGH=1): SPBRG=12
+    MOVWF   SPBRG
+;--------------------------------------------------------------
 
     ;Timer 1
     BANKSEL     T1CON
@@ -100,8 +116,7 @@ MAIN:
     BANKSEL     OPTION_REG
     BCF         OPTION_REG,INTEDG   ; Flanco de Bajada para INT, el pulsador esta en 1 siempre
     MOVLW       B'01010001'         ; Habilito interrupciones por ADC - TX - TMR1
-    MOVWF       PIE1
-    ; Habilita las interrupciones globales y periféricas, y configura las fuentes de interrupción.
+    MOVWF       PIE1                ; Habilita las interrupciones globales y periféricas, y configura las fuentes de interrupción.
 
     ;Activo TMR1
     BANKSEL     T1CON
@@ -118,28 +133,84 @@ MAIN_LOOP:                          ; Loop Principal
     SUBWF       TEMPACTUAL,W
     BTFSC       STATUS,Z
     BSF         PORTE,RE1           ; Prendo el led si la temperatura es mayor
+
+    ;ADC
+    ; Si pasó 1 segundo, inicio conversión
+    BTFSS   FLAG_1SEG, 0
+    GOTO    CHECK_ADC_OK
+    BCF     FLAG_1SEG, 0
+    BSF     ADCON0, GO     ; Iniciar conversión ADC
+    BSF     ADCON0, ADON
+    GOTO    CHECK_ADC_OK
+
+CHECK_ADC_OK:
+    BTFSS   FLAG_ADC_OK, 0
+    GOTO    CHECK_TX
+    BCF     FLAG_ADC_OK, 0
+    BSF     FLAG_TX, 0     ; Listo para enviar por UART
+
+CHECK_TX:
+    BTFSS   FLAG_TX, 0
+    GOTO    FIN_LOOP
+
+    ; Enviar TEMPACTUAL por UART como ASCII (2 dígitos)
+    MOVF    TEMPACTUAL, W
+    MOVWF   WREG_TEMP
+    MOVLW   .10
+    MOVWF   WREG_TEMP2
+    CLRF    DIG1
+
+    ; Dividir por 10 para obtener decena
+DIV_LOOP:
+    MOVF    WREG_TEMP, W
+    SUBWF   WREG_TEMP2, W
+    BTFSS   STATUS, C
+    GOTO    SEND_DIGITS
+    INCFSZ  DIG1, F
+    SUBWF   WREG_TEMP, F
+    GOTO    DIV_LOOP
+
+ENVIAR_DIGITOS:
+    ; Enviar decena
+    MOVF    DIG1, W
+    ADDLW   '0'
+    MOVWF   TXREG
+ESPERO_TX1:
+    BTFSS   PIR1,TXIF
+    GOTO    WAIT_TX1
+
+    ; Enviar unidad
+    MOVF    WREG_TEMP, W
+    ADDLW   '0'
+    MOVWF   TXREG
+ESPERO_TX2:
+    BTFSS   PIR1,TXIF
+    GOTO    WAIT_TX2
+
+    BCF     FLAG_TX, 0
+    
     GOTO        MAIN_LOOP           ; Vuelve al inicio del loop principal.
 ; --------------------------------------------
 TECLADO:                    ; Subrutina de Teclado
     BANKSEL     PORTD
     MOVLW       0x0F	    ; pongo 1 todas las columnas
-	MOVWF       PORTD
+    MOVWF       PORTD
     MOVF        PORTD, W	; y veo todas las filas
     ANDLW       0xF0        ; enmascarar filas
     BTFSC       STATUS, Z
-	GOTO        TECLADO	    ; no hay teclas presionadas -> vuelvo al loop
+    GOTO        TECLADO	    ; no hay teclas presionadas -> vuelvo al loop
     CALL        RETARDO_20ms
-	MOVF        PORTD, W 
+    MOVF        PORTD, W 
     ANDLW       0xF0 
     BTFSC       STATUS, Z
-	GOTO        TECLADO     ; no hay teclas presionadas -> vuelvo al Teclado --- Si -> voy a escanear las teclas
-	CALL        ESCANEAR_TECLAS
-	MOVF        INDICE, W
+    GOTO        TECLADO     ; no hay teclas presionadas -> vuelvo al Teclado --- Si -> voy a escanear las teclas
+    CALL        ESCANEAR_TECLAS
+    MOVF        INDICE, W
     SUBLW       0x0F	    
-	BTFSS       STATUS, C	    ; Indice < = que 15?
-	RETURN          	        ; no -> indice no válido
-	MOVF        INDICE, W	    ; si -> buscar valor en tabla TECLAS
-	CALL        TECLAS          ; La tabla TECLAS ya devuelve el valor decimal (0-9)
+    BTFSS       STATUS, C	    ; Indice < = que 15?
+    RETURN          	            ; no -> indice no válido
+    MOVF        INDICE, W	    ; si -> buscar valor en tabla TECLAS
+    CALL        TECLAS          ; La tabla TECLAS ya devuelve el valor decimal (0-9)
     MOVWF       WREG_TEMP       ; WREG_TEMP = valor numérico de la tecla
     BTFSS       INGRESAR, 1     ; ¿Ya se ingresó el primer dígito? (usamos INGRESAR,1 como flag) - Si NO se ingresó el primer dígito, lo guardo como decena y retorno
     GOTO        TECLADO_PRIMER_DIGITO
@@ -311,13 +382,16 @@ ISR_TMR1:   ; Atiende la interrupción del temporizador 1 y activa la bandera de
     GOTO    SALIR
 ; --------------------------------------------
 ISR_ADC:    ; Atiende la interrupción del ADC y limpia la bandera correspondiente.
-    NOP
-    BCF     PIR1,ADIF   
+    BCF     PIR1,ADIF
+    BANKSEL ADRESH
+    MOVF    ADRESH, W     ; Leemos solo ADRESH (justificado a la izquierda)
+    MOVWF   TEMPACTUAL    ; Guardamos la temperatura
+    BSF     FLAG_ADC_OK, 0
     GOTO    SALIR
 ; --------------------------------------------
 ISR_TRANSMICION:    ; Atiende la interrupción de transmisión y limpia la bandera correspondiente.
-    NOP
     BCF     PIR1,TXIF
+    BCF     FLAG_TX, 0
     GOTO    SALIR
 ; --------------------------------------------
 SALIR:    ; Restaura el contexto y retorna de la interrupción.
