@@ -139,6 +139,7 @@ MAIN_LOOP:                          ; Loop Principal
     BTFSS   FLAG_1SEG, 0
     GOTO    CHECK_ADC_OK
     BCF     FLAG_1SEG, 0
+    BANKSEL ADCON0
     BSF     ADCON0, GO     ; Iniciar conversión ADC
     BSF     ADCON0, ADON
     GOTO    CHECK_ADC_OK
@@ -177,7 +178,7 @@ ENVIAR_DIGITOS:
     MOVWF   TXREG
 ESPERO_TX1:
     BTFSS   PIR1,TXIF
-    GOTO    WAIT_TX1
+    GOTO    ESPERO_TX1
 
     ; Enviar unidad
     MOVF    WREG_TEMP, W
@@ -185,7 +186,7 @@ ESPERO_TX1:
     MOVWF   TXREG
 ESPERO_TX2:
     BTFSS   PIR1,TXIF
-    GOTO    WAIT_TX2
+    GOTO    ESPERO_TX2
 
     BCF     FLAG_TX, 0
     
@@ -373,7 +374,7 @@ ISR:                    ; Rutina principal de atención a interrupciones: verifi
 ISR_RB0     ; Atiende la interrupción por el pulsador en RB0 y conmuta la bandera de ingreso.
     BCF     INTCON,INTF
     MOVLW   0X01
-    XORWF   INGRESAR,INGRASAR   ;si estaba en 1 pasa a 0, si estaba en 0 pasa a 1
+    XORWF   INGRESAR,INGRESAR   ;si estaba en 1 pasa a 0, si estaba en 0 pasa a 1
     GOTO    SALIR
 ; --------------------------------------------
 ISR_TMR1:   ; Atiende la interrupción del temporizador 1 y activa la bandera de 1 segundo.
