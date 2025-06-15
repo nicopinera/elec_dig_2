@@ -20,6 +20,11 @@ COL
 ; Mascara de columna
 COLMASK    
 
+; Displays
+DIGITO_0        ; Unidad
+DIGITO_1        ; Decena
+DISPLAY_FLAG    ; Alterna entre display 0 y 1
+
 ; Contador delay
 CONT0       
 CONT1 
@@ -51,12 +56,16 @@ MAIN:
     CLRF        FLAG_1SEG
     CLRF        FLAG_ADC_OK
     CLRF        FLAG_TX
+    CLRF        DIGITO_0        
+    CLRF        DIGITO_1     
+    CLRF        DISPLAY_FLAG
     ; Se inicializan todas las banderas y variables de control en cero.
 
     ;Configuracion de Puertos
     BANKSEL     TRISD
     MOVLW       B'11110000' ; RD7-RD4 Entradas (filas), RD3-RD0 Filas (columnas)
     MOVWF       TRISD
+    CLRF        TRISC       ; Display segmentos como salida
     MOVLW       B'00000001' ; Configura el puerto B: RBO para el pulsador y RB1 -RB2 los habilitadores del display.
     MOVWF       TRISB
     BSF         TRISE,RE0   
@@ -97,18 +106,22 @@ MAIN:
     MOVLW   .12          ; Baud Rate 9600 con Fosc = 2MHz (BRGH=1): SPBRG=12
     MOVWF   SPBRG
 ;--------------------------------------------------------------
+    ;Timer 0
+    BANKSEL OPTION_REG
+    MOVLW   B'00000111'         ; TMR0 con prescaler 1:256
+    MOVWF   OPTION_REG
+    CLRF    TMR0
 
     ;Timer 1
     BANKSEL     T1CON
     CLRF        TMR1L
     CLRF        TMR1H
     MOVLW       B'00110000'
-    MOVWF       T1CON
-    ; Inicializa el temporizador TMR1 y lo configura.
+    MOVWF       T1CON            ; Inicializa el temporizador TMR1 y lo configura.
 
     ;Configuracion de Interrupciones
     BANKSEL     INTCON 
-    MOVLW       B'11010000'         ; Habilito GIE - PEIE - INTE y limpio bandera INTF
+    MOVLW       B'11110000'         ; Habilito GIE - PEIE - T0IE- INTE y limpio bandera INTF
     MOVWF       INTCON 
     BCF         PIR1,ADIF
     BCF         PIR1,TXIF
@@ -239,6 +252,7 @@ TECLADO_SEGUNDO_DIGITO:
     ; Ahora sumamos el segundo dígito (unidad)
     MOVF    WREG_TEMP, W
     ADDWF   TEMPREF, F
+    CALL    ACTUALIZAR_DISPLAY  ;Para que se carguen los dos digitos de temperatura en el display
 
     ; Limpiamos la bandera de INGRESAR para terminar la carga
     BCF     INGRESAR, 0
@@ -343,6 +357,29 @@ TECLAS:
     RETLW   0x02    ; 13: 2
     RETLW   0x03    ; 14: 3
     RETLW   0xFF    ; 15: A
+
+;----------------------------------------------------------
+Subrutina del display
+;------------------------------------------------------------------------
+ACTUALIZAR_DISPLAY:
+    MOVF    TEMPACTUAL, W ; o TEMPREF
+    MOVWF   WREG_TEMP
+    MOVLW   .10
+    MOVWF   WREG_TEMP2
+    CLRF    DIGITO_1
+BUCLE_RESTA:
+    SUBWF   WREG_TEMP, W
+    BTFSS   STATUS, C
+    GOTO    GUARDAR_UNIDAD
+    INCF    DIGITO_1, F
+    MOVF    WREG_TEMP, W
+    SUBWF   WREG_TEMP2, W
+    MOVWF   WREG_TEMP
+    GOTO    BUCLE_RESTA
+GUARDAR_UNIDAD:
+    MOVF    WREG_TEMP, W
+    MOVWF   DIGITO_0
+    RETURN
 ; --------------------------------------------
 RETARDO_20ms:           ; Rutina de retardo aproximado de 20 ms usando bucles anidados.
     MOVLW       .10
@@ -355,11 +392,25 @@ L1  NOP
     DECFSZ      CONT0,1
     GOTO        L2
     RETURN
+;-----------------------------------------------------------------------------
+TABLA_7SEG:
+    RETLW   B'11000000' ; 0
+    RETLW   B'11111001' ; 1
+    RETLW   B'10100100' ; 2
+    RETLW   B'10110000' ; 3
+    RETLW   B'10011001' ; 4
+    RETLW   B'10010010' ; 5
+    RETLW   B'10000010' ; 6
+    RETLW   B'11111000' ; 7
+    RETLW   B'10000000' ; 8
+    RETLW   B'10010000' ; 9
 ; --------------------------------------------
 ISR:                    ; Rutina principal de atención a interrupciones: verifica la fuente y salta a la rutina correspondiente.
     MOVWF   WTEMP       ;Guardo el contexto previo a la interrupcion
     SWAPF   STATUS,W
     MOVWF   STATUST
+    BTFSC   INTCON, T0IF  ;Testeo del Timer0
+    GOTO    ISR_TMR0   
     BANKSEL PIR1        ; Testeo de banderas
     BTFSC   INTCON,INTF ; Bandera del Pulsador
     GOTO    ISR_RB0
@@ -371,6 +422,29 @@ ISR:                    ; Rutina principal de atención a interrupciones: verifi
     GOTO    ISR_TRANSMICION 
     GOTO    SALIR
 ; --------------------------------------------
+ISR_TMR0:
+    BCF     INTCON, T0IF
+    BCF     PORTA, 0
+    BCF     PORTA, 1
+    MOVF    DISPLAY_FLAG, W
+    BTFSC   STATUS, Z
+    GOTO    MUX_DISPLAY_1
+    ; Mostrar unidad
+    MOVF    DIGITO_0, W
+    CALL    TABLA_7SEG
+    MOVWF   PORTC
+    BSF     PORTA, 1
+    CLRF    DISPLAY_FLAG
+    GOTO    SALIR
+MUX_DISPLAY_1:
+    MOVF    DIGITO_1, W
+    CALL    TABLA_7SEG
+    MOVWF   PORTC
+    BSF     PORTA, 0
+    MOVLW   0x01
+    MOVWF   DISPLAY_FLAG
+    GOTO    SALIR
+;----------------------------------------------
 ISR_RB0     ; Atiende la interrupción por el pulsador en RB0 y conmuta la bandera de ingreso.
     BCF     INTCON,INTF
     MOVLW   0X01
@@ -385,8 +459,9 @@ ISR_TMR1:   ; Atiende la interrupción del temporizador 1 y activa la bandera de
 ISR_ADC:    ; Atiende la interrupción del ADC y limpia la bandera correspondiente.
     BCF     PIR1,ADIF
     BANKSEL ADRESH
-    MOVF    ADRESH, W     ; Leemos solo ADRESH (justificado a la izquierda)
-    MOVWF   TEMPACTUAL    ; Guardamos la temperatura
+    MOVF    ADRESH, W           ; Leemos solo ADRESH (justificado a la izquierda)
+    MOVWF   TEMPACTUAL          ; Guardamos la temperatura
+    CALL    ACTUALIZAR_DISPLAY  ; Cada vez que se complete una conversion del ADC se actualizan los displays *(REVISAR POR LAS DUDAS)*
     BSF     FLAG_ADC_OK, 0
     GOTO    SALIR
 ; --------------------------------------------
