@@ -138,16 +138,13 @@ MAIN:
 MAIN_LOOP:                          ; Loop Principal
     BTFSC       INGRESAR,0          ; Si esta en 0 no espero una tecla
     CALL        TECLADO             ; Si se está esperando el ingreso de un número, llama a la rutina de teclado.
-    
-    ;MULTIPLEXADO DISPLAY
-    ; Aquí se debe agregar el código para multiplexar el display.
-    
+ 
     MOVF        TEMPREF,W           ; Compara la temperatura actual con la de referencia y enciende el LED si corresponde.
     SUBWF       TEMPACTUAL,W
     BTFSC       STATUS,Z
     BSF         PORTE,RE1           ; Prendo el led si la temperatura es mayor
 
-    ;ADC
+    ;---ADC---------
     ; Si pasó 1 segundo, inicio conversión
     BTFSS   FLAG_1SEG, 0
     GOTO    CHECK_ADC_OK
