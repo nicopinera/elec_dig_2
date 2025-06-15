@@ -23,7 +23,7 @@ COLMASK	    EQU 0X24
 
 ; Banderas
 ; B0: Bandera de 1 segundo - Si =1 comienza la conversion en ADC - Si =0 no compienza la conversion - Bandera activada por TMR1 cada 1 segundo
-FLAG	    EQU	0X31
+;FLAG	    EQU	0X31
 	    
 	    
 ; Displays
@@ -107,19 +107,14 @@ MAIN:
     MOVLW       B'00110000'
     MOVWF       T1CON            ; Inicializa el temporizador TMR1 y lo configura.
     
-    BANKSEL OPTION_REG	    ; -- Timer 0
-    MOVLW   B'00000111'     ; TMR0 con prescaler 1:256
-    MOVWF   OPTION_REG
-    CLRF    TMR0
-    
-    BANKSEL     INTCON		; -- Configuracion de Interrupciones y TMR0
+    BANKSEL     INTCON		    ; -- Configuracion de Interrupciones y TMR0
     MOVLW       B'11110000'     ; Habilito GIE - PEIE - T0IE- INTE y limpio bandera INTF
     MOVWF       INTCON 
-    CLRF	PIR1		; Limpio banderas de ADC - Tx - TRM1iF
+    CLRF	    PIR1		    ; Limpio banderas de ADC - Tx - TRM1iF
     BANKSEL     OPTION_REG
-    MOVLW	B'10010111'	; Flanco de bajada para INT - Frecuencia interna para TMR0 - Prescaler para TMR0 - 1:256
-    MOVWF	OPTION_REG	
-    BANKSEL	PIE1		
+    MOVLW	    B'10010111'	    ; Flanco de bajada para INT - Frecuencia interna para TMR0 - Prescaler para TMR0 - 1:256
+    MOVWF	    OPTION_REG	
+    BANKSEL	    PIE1		
     MOVLW       B'01010001'     ; Habilito interrupciones por ADC - TX - TMR1
     MOVWF       PIE1            
 
@@ -134,8 +129,7 @@ MAIN_LOOP:                      ; -- Loop Principal
     GOTO        MAIN_LOOP
 
     BTFSC	    FLAG_1SEG, 0    ; Si pasó 1 segundo, inicio conversión ADC
-    GOTO        INICIAR_ADC
-    ; Si no pasó 1 segundo, sigue
+    GOTO        INICIAR_ADC     ; Si no pasó 1 segundo, sigue
 
     BTFSC       FLAG_ADC_OK, 0	; Si el ADC finalizó, preparar para transmitir
     GOTO        PREPARAR_TX
@@ -165,16 +159,14 @@ PREPARAR_TX:
     BSF         FLAG_TX, 0     ; Listo para enviar por UART
     GOTO        MAIN_LOOP
 
-ENVIAR_UART:
-    ; Enviar TEMPACTUAL por UART como ASCII (2 dígitos)
+ENVIAR_UART: ; Enviar TEMPACTUAL por UART como ASCII (2 dígitos)
     MOVF    TEMPACTUAL, W
     MOVWF   WREG_TEMP
     MOVLW   .10
     MOVWF   WREG_TEMP2
     CLRF    DIG1
-
-    ; Dividir por 10 para obtener decena
-DIV_LOOP:
+    
+DIV_LOOP:   ; Dividir por 10 para obtener decena
     MOVF    WREG_TEMP, W
     SUBWF   WREG_TEMP2, W
     BTFSS   STATUS, C
@@ -183,163 +175,138 @@ DIV_LOOP:
     SUBWF   WREG_TEMP, F
     GOTO    DIV_LOOP
 
-ENVIAR_DIGITOS:
-    ; Enviar decena
+ENVIAR_DIGITOS: ; Enviar decena
     MOVF    DIG1, W
     ADDLW   '0'
     MOVWF   TXREG
 ESPERO_TX1:
     BTFSS   PIR1,TXIF
     GOTO    ESPERO_TX1
-
-    ; Enviar unidad
-    MOVF    WREG_TEMP, W
+    MOVF    WREG_TEMP, W    ; Enviar unidad
     ADDLW   '0'
     MOVWF   TXREG
 ESPERO_TX2:
     BTFSS   PIR1,TXIF
     GOTO    ESPERO_TX2
-
+    MOVLW   0x0A    ; Agregar salto de línea (LF, 0x0A)
+    MOVWF   TXREG
+ESPERO_TX3:
+    BTFSS   PIR1,TXIF
+    GOTO    ESPERO_TX3
     BCF     FLAG_TX, 0
     GOTO    MAIN_LOOP
-
 ; --------------------------------------------
 TECLADO:                    ; Subrutina de Teclado
     BANKSEL     PORTD
-    MOVLW       0x0F	    ; pongo 1 todas las columnas
-    MOVWF       PORTD
-    MOVF        PORTD, W	; y veo todas las filas
-    ANDLW       0xF0        ; enmascarar filas
+    MOVLW       0x0E        ; RD3-RD1 en 1 (columnas), RD7-RD4 entradas (filas)
+    IORWF       PORTD, F    ; Asegura columnas en 1
+    MOVF        PORTD, W    ; Lee filas
+    ANDLW       0xF0        ; Enmascara filas
     BTFSC       STATUS, Z
-    GOTO        TECLADO	    ; no hay teclas presionadas -> vuelvo al loop
+    GOTO        TECLADO     ; No hay teclas presionadas
     CALL        RETARDO_20ms
-    MOVF        PORTD, W 
-    ANDLW       0xF0 
+    MOVF        PORTD, W
+    ANDLW       0xF0
     BTFSC       STATUS, Z
-    GOTO        TECLADO     ; no hay teclas presionadas -> vuelvo al Teclado --- Si -> voy a escanear las teclas
+    GOTO        TECLADO     ; No hay teclas presionadas
     CALL        ESCANEAR_TECLAS
     MOVF        INDICE, W
-    SUBLW       0x0F	    
-    BTFSS       STATUS, C	    ; Indice < = que 15?
-    RETURN          	            ; no -> indice no válido
-    MOVF        INDICE, W	    ; si -> buscar valor en tabla TECLAS
-    CALL        TECLAS          ; La tabla TECLAS ya devuelve el valor decimal (0-9)
-    MOVWF       WREG_TEMP       ; WREG_TEMP = valor numérico de la tecla
-    BTFSS       INGRESAR, 1     ; ¿Ya se ingresó el primer dígito? (usamos INGRESAR,1 como flag) - Si NO se ingresó el primer dígito, lo guardo como decena y retorno
+    SUBLW       0x0B        ; Solo índices 0-11 válidos
+    BTFSS       STATUS, C
+    RETURN                  ; No válido
+    MOVF        INDICE, W
+    CALL        TECLAS
+    MOVWF       WREG_TEMP
+    MOVF        WREG_TEMP, W
+    XORLW       0xFF
+    BTFSC       STATUS, Z
+    RETURN      ; Si es 0xFF, no hacer nada
+    BTFSS       INGRESAR, 1
     GOTO        TECLADO_PRIMER_DIGITO
-    ; Si YA se ingresó el primer dígito, este es el segundo (unidad)
-    ; Combinar decena y unidad
-
     CALL        TECLADO_SEGUNDO_DIGITO
     RETURN
 
 TECLADO_SEGUNDO_DIGITO:
-    MOVF    DIG1, W            ; decena
+    MOVF    DIG1, W
     MOVWF   TEMPREF
-    RLF     TEMPREF, F         ; TEMPREF = DIG1 * 2
-    RLF     TEMPREF, F         ; TEMPREF = DIG1 * 4
-    RLF     TEMPREF, F         ; TEMPREF = DIG1 * 8
-    RLF     TEMPREF, F         ; TEMPREF = DIG1 * 16
-    ; TEMPREF = DIG1 * 16, queremos *10, sumamos (DIG1*8 + DIG1*2)
     MOVF    DIG1, W
-    ADDWF   TEMPREF, F         ; TEMPREF += DIG1 (ahora *17)
-    ADDWF   TEMPREF, F         ; TEMPREF += DIG1 (ahora *18)
-    ; Ahora TEMPREF = DIG1*18, restamos DIG1*8
+    RLF     WREG_TEMP, W
+    ADDWF   TEMPREF, F
+    MOVF    TEMPREF, W
+    RLF     WREG_TEMP, W
+    ADDWF   TEMPREF, F
     MOVF    DIG1, W
-    MOVWF   WREG_TEMP2
-    RLF     WREG_TEMP2, F      ; WREG_TEMP2 = DIG1*2
-    RLF     WREG_TEMP2, F      ; WREG_TEMP2 = DIG1*4
-    RLF     WREG_TEMP2, F      ; WREG_TEMP2 = DIG1*8
-    SUBWF   TEMPREF, F         ; TEMPREF = (DIG1*18) - (DIG1*8) = DIG1*10
-    ; Ahora sumamos el segundo dígito (unidad)
+    ADDWF   TEMPREF, F
     MOVF    WREG_TEMP, W
     ADDWF   TEMPREF, F
-    CALL    ACTUALIZAR_DISPLAY  ;Para que se carguen los dos digitos de temperatura en el display
-
-    ; Limpiamos la bandera de INGRESAR para terminar la carga
+    CALL    ACTUALIZAR_DISPLAY
     BCF     INGRESAR, 0
     BCF     INGRESAR, 1
     RETURN
-    ; Cuando se ingresa el segundo dígito, se calcula el valor final y se limpia la bandera de ingreso.
-; --------------------------------------------
+
 TECLADO_PRIMER_DIGITO:
     MOVF    WREG_TEMP, W
     MOVWF   DIG1
-    BSF     INGRESAR, 1   ; Seteamos flag de primer dígito ingresado
-    GOTO	TECLADO
-    ; Cuando se ingresa el primer dígito, se guarda como decena y se activa la bandera para esperar el segundo dígito.
+    BSF     INGRESAR, 1
+    GOTO    TECLADO
 
-;-----------------------------------------------------------
-; ESCANEAR_TECLAS: Escanea el teclado 4x3 y devuelve en INDICE el índice físico (0-11)
-; Si no hay tecla válida, INDICE = 0xFF
-;-----------------------------------------------------------
 ESCANEAR_TECLAS:
-    CLRF    COL             ; Inicializa columna en 0
-    MOVLW   0x02            ; Empieza con RD1 (columna 1)
-    MOVWF   COLMASK         ; COLMASK = 0x02
+    CLRF    COL
+    MOVLW   0x02            ; RD1 (columna 1)
+    MOVWF   COLMASK
 SCAN_COL_LOOP:
-    MOVLW   0x0F            ; Todas las columnas en 1 (RD3-RD1)
-    IORWF   PORTD, F        ; Asegura columnas en 1
-    COMF    COLMASK, W      ; Invierte máscara: columna activa en 0
-    ANDLW   0x0E            ; Solo columnas RD3-RD1 (0b00001110)
-    IORLW   0xF1            ; Mantiene filas (RD7-RD4) en 1, RD0 en 1
-    MOVWF   PORTD           ; Aplica a PORTD: una columna en 0, el resto en 1
-    NOP                     ; Pequeño retardo para estabilizar
+    MOVLW   0x0E            ; RD3-RD1 en 1
+    IORWF   PORTD, F
+    COMF    COLMASK, W      ; Columna activa en 0
+    ANDLW   0x0E            ; Solo columnas
+    IORLW   0xF0            ; Filas en 1
+    MOVWF   PORTD
+    NOP
     NOP
     MOVF    PORTD, W
-    ANDLW   0xF0            ; Enmascara filas (RD7-RD4)
-    XORLW   0xF0            ; Si todas filas en 1, resultado será 0 (ninguna tecla)
+    ANDLW   0xF0
+    XORLW   0xF0
     BTFSC   STATUS, Z
-    GOTO    NEXT_COL        ; Si no hay tecla en esta columna, pasa a la siguiente
-
-    ; Alguna fila está en 0, detectar cuál
+    GOTO    NEXT_COL
     MOVF    PORTD, W
     ANDLW   0xF0
-    XORLW   0xF0            ; Invierte filas: la presionada será 1
-    MOVWF   WREG_TEMP       ; WREG_TEMP = bits de fila activa
-    CLRF    INDICE          ; INDICE = número de fila (0-3)
-    MOVLW   0x10            ; Empieza con RD4 (fila 4)
-    MOVWF   WREG_TEMP2      ; WREG_TEMP2 = máscara de fila a chequear
-
+    XORLW   0xF0
+    MOVWF   WREG_TEMP
+    CLRF    INDICE
+    MOVLW   0x80            ; RD7 (fila 1)
+    MOVWF   WREG_TEMP2
 SCAN_ROW_LOOP:
     MOVF    WREG_TEMP, W
     ANDWF   WREG_TEMP2, W
     BTFSS   STATUS, Z
-    GOTO    FOUND_ROW       ; Si bit de fila está en 1, es la fila activa
+    GOTO    FOUND_ROW
     INCF    INDICE, F
-    RLF     WREG_TEMP2, F   ; Siguiente bit de fila (RD4->RD5->RD6->RD7)
-    MOVLW   0x80
-    SUBWF   WREG_TEMP2, W
-    BTFSS   STATUS, C
-    GOTO    NEXT_COL        ; Si ya chequeó las 4 filas, pasa a la siguiente columna
+    RRF     WREG_TEMP2, F   ; Siguiente fila (RD7->RD6->RD5->RD4)
+    MOVF    WREG_TEMP2, W
+    BTFSC   STATUS, Z
+    GOTO    NEXT_COL
     GOTO    SCAN_ROW_LOOP
-
 FOUND_ROW:
     ; INDICE = número de fila (0-3)
-    ; Calcula índice físico: INDICE = fila*3 + columna
+    ; Calcula índice físico: INDICE = fila*3 + (columna-1)
     MOVF    INDICE, W
     MOVWF   WREG_TEMP2
     RLF     WREG_TEMP2, F   ; *2
     ADDWF   INDICE, W       ; W = fila*3 + fila
-    ADDWF   COL, W          ; W = fila*3 + columna
-    MOVWF   INDICE          ; Guarda índice físico en INDICE
+    MOVF    COL, W
+    ADDWF   WREG_TEMP2, W   ; W = fila*3 + columna
+    MOVWF   INDICE
     RETURN
-
 NEXT_COL:
     INCF    COL, F
     MOVLW   0x03
     SUBWF   COL, W
-    BTFSS   STATUS, Z       ; ¿Ya se probaron las 3 columnas?
-    RLF     COLMASK, F      ; Siguiente columna (RD1->RD2->RD3)
+    BTFSS   STATUS, Z
+    RLF     COLMASK, F
     GOTO    SCAN_COL_LOOP
     MOVLW   0xFF            ; No se detectó tecla
     MOVWF   INDICE
     RETURN
-
-;-----------------------------------------------------------
-; TECLAS: Traduce el índice físico (0-11) a valor numérico (0-9)
-; Si no es un número, devuelve 0xFF
-;-----------------------------------------------------------
 TECLAS:
     ADDWF   PCL, F
     RETLW   0xFF    ; 0: * (fila 1, col 1)
@@ -354,7 +321,7 @@ TECLAS:
     RETLW   0x01    ; 9: 1 (fila 4, col 1)
     RETLW   0x02    ; 10: 2 (fila 4, col 2)
     RETLW   0x03    ; 11: 3 (fila 4, col 3)
-    RETLW   0xFF    ; 12: A (fila 4, col 3)
+    ; Eliminado el índice 12, ya que solo hay 12 teclas en 4x3
 
 ;----------------------------------------------------------
 ;Subrutina del display
@@ -473,10 +440,6 @@ SALIR:    ; Restaura el contexto y retorna de la interrupción.
     SWAPF   STATUST,W
     MOVWF   STATUST
     SWAPF   WTEMP,F
-    SWAPF   WTEMP,W
-    RETFIE
-; --------------------------------------------
-    END
     SWAPF   WTEMP,W
     RETFIE
 ; --------------------------------------------
