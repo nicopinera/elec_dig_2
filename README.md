@@ -112,3 +112,4 @@ A continuación se detallan los comandos más comunes para utilizar git:
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/nicopinera/elec_dig_2)
 
+[MPLAB](https://ww1.microchip.com/downloads/en/DeviceDoc/MPLABX-v5.35-windows-installer.exe)
