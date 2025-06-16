@@ -59,17 +59,12 @@ MAIN:
     CLRF        INGRESAR    ; -- Limpieza de Banderas
     CLRF        TEMPREF
     CLRF        FLAG
-;    CLRF        FLAG_1SEG   ;FLAG,B0
-;    CLRF        FLAG_ADC_OK ;FLAG,B1
-;    CLRF        FLAG_TX     ;FLAG,B2
     CLRF        DIGITO_0        
     CLRF        DIGITO_1     
-;    CLRF        DISPLAY_FLAG ;FLAG,B3
 
     BANKSEL     TRISD	    ; -- Configuracion de Puertos
     MOVLW       B'11110000' ; RD7-RD4 Entradas (filas), RD3-RD0 Filas (columnas)
     MOVWF       TRISD
-    ;CLRF        TRISC       ; Display segmentos como salida
     MOVLW       B'00000001' ; Configura el puerto B: RBO para el pulsador y RB1 -RB2 los habilitadores del display.
     MOVWF       TRISB
     BSF         TRISE,RE0   ; Configura el puerto E: RE0 como entrada analogica para el sensor y RE1 como salida para el LED.
@@ -128,16 +123,16 @@ MAIN:
 MAIN_LOOP:                      ; -- Loop Principal
     BTFSC       INGRESAR,0	    ; Si está esperando ingreso de número
     CALL        TECLADO		    ; Llama a la rutina de teclado
-    BTFSC       INGRESAR,0      ; Si sigue esperando ingreso, no hace nada más
+    BTFSC       INGRESAR,0          ; Si sigue esperando ingreso, no hace nada más
     GOTO        MAIN_LOOP
                 ;FLAG,0    
-    BTFSC	FLAG,0   ; Si pasó 1 segundo, inicio conversión ADC
-    GOTO        INICIAR_ADC     ; Si no pasó 1 segundo, sigue
+    BTFSC	FLAG,0              ; Si pasó 1 segundo, inicio conversión ADC
+    GOTO        INICIAR_ADC         ; Si no pasó 1 segundo, sigue
                 ;FLAG,1
-    BTFSC       FLAG,1	; Si el ADC finalizó, preparar para transmitir ;FLAG,B1
+    BTFSC       FLAG,1	            ; Si el ADC finalizó, preparar para transmitir ;FLAG,B1
     GOTO        PREPARAR_TX
                 ;FLAG,2
-    BTFSC       FLAG,2      ; Si hay que transmitir, enviar por UART
+    BTFSC       FLAG,2              ; Si hay que transmitir, enviar por UART
     GOTO        ENVIAR_UART
 
     ; Comparación de temperatura actual con la temperatura de referencia para prender el led
@@ -159,7 +154,7 @@ INICIAR_ADC:
 
 PREPARAR_TX:
     BCF         FLAG,1
-    BSF         FLAG,2     ; Listo para enviar por UART ;FLAG,2
+    BSF         FLAG,2             ; Listo para enviar por UART ;FLAG,2
     GOTO        MAIN_LOOP
 
 ENVIAR_UART: ; Enviar TEMPACTUAL por UART como ASCII (2 dígitos)
@@ -396,8 +391,6 @@ ISR_TMR0:
     BCF     PORTB, RB1
     BCF     PORTB, RB2
     BTFSC   FLAG,3
-;    MOVF    DISPLAY_FLAG, W
-;    BTFSC   STATUS, Z
     GOTO    MUX_DISPLAY_1
     ; Mostrar unidad
     MOVF    DIGITO_0, W
@@ -405,7 +398,6 @@ ISR_TMR0:
     MOVWF   PORTA
     BSF     PORTB, RB2
     BSF     FLAG,3
-;    CLRF    DISPLAY_FLAG
     GOTO    SALIR
 MUX_DISPLAY_1:
     MOVF    DIGITO_1, W
@@ -413,8 +405,6 @@ MUX_DISPLAY_1:
     MOVWF   PORTA
     BSF     PORTB, RB1
     BCF     FLAG,3
-;    MOVLW   0x01
-;    MOVWF   DISPLAY_FLAG
     GOTO    SALIR
 ;----------------------------------------------
 ISR_RB0:     ; Atiende la interrupción por el pulsador en RB0 y conmuta la bandera de ingreso.
