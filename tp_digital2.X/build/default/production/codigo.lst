@@ -1,4 +1,4 @@
-MPASM 5.87                        CODIGO.ASM   6-15-2025  20:57:51         PAGE  1
+MPASM 5.87                        CODIGO.ASM   6-16-2025  12:28:31         PAGE  1
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -39,495 +39,509 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00023 
                       00024 ; Banderas
                       00025 ; B0: Bandera de 1 segundo - Si =1 comienza la conversion en ADC - Si =0 no compienza la conversion - Ba
-                            ndera activada por TMR1 cada 1 segundo
-                      00026 ;FLAG       EQU 0X31
-                      00027             
-                      00028             
-                      00029 ; Displays
-  00000025            00030 DIGITO_0    EQU 0X25        ; Unidad
-  00000026            00031 DIGITO_1    EQU 0X26        ; Decena
-  00000027            00032 DISPLAY_FLAG    EQU     0X27        ; Alterna entre display 0 y 1
-                      00033 
-                      00034 ; Contador delay
-  00000028            00035 CONT0 EQU 0X28       
-  00000029            00036 CONT1 EQU 0X29 
-  0000002A            00037 DIG1 EQU 0X2A        ; Primer dígito temporal
-  0000002B            00038 WREG_TEMP EQU 0X2B   ; Variable temporal para cálculos
-  0000002C            00039 WREG_TEMP2 EQU 0X2C  ; Variable temporal para cálulos
-  0000002D            00040 FLAG_1SEG EQU 0X2D   ; Bandera activada por TMR1 cada 1 segundo
-  0000002E            00041 FLAG_ADC_OK EQU 0X2E ; Bandera que indica que el ADC terminó
-  0000002F            00042 FLAG_TX EQU 0X2F     ; Bandera para indicar que hay que transmitir
-MPASM 5.87                        CODIGO.ASM   6-15-2025  20:57:51         PAGE  2
+                            ndera activada por TMR1 cada 1 segundo (FLAG_1SEG)
+                      00026 ; B1: Bandera del ADC - Si = 1 el ADC finalizo - Si = 0 el ADC no termino (FLAG_ADC_OK)
+                      00027 ; B2: Bandera para Tramistir - Si = 1 Hay que enviar la info por EUSART - Si = 0 no hay que inviar (FLAG
+                            _TX)
+                      00028 ; B3: Display que se prende - 0 = Display 2 (UNIDAD - RB2) - 1 = Display 1 (DECENA - RB1)
+  00000025            00029 FLAG        EQU 0X25
+                      00030             
+                      00031 ; Displays
+                      00032 
+                      00033 ; Unidad
+  00000026            00034 DIGITO_0    EQU 0X26
+                      00035 
+                      00036 ; Decena
+  00000027            00037 DIGITO_1    EQU 0X27        
+                      00038 
+                      00039 ; Contador delay
+  00000029            00040 CONT0 EQU 0X29       
+  0000002A            00041 CONT1 EQU 0X2A 
+MPASM 5.87                        CODIGO.ASM   6-16-2025  12:28:31         PAGE  2
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-  00000030            00043 TEMPACTUAL EQU 0X30  ;Temperatura actual
-                      00044 
-                      00045 ; Para guardar contexto
-  00000070            00046 WTEMP   EQU 0X70
-  00000071            00047 STATUST EQU 0X71
-                      00048 ; --------------------------------------------
-                      00049     ORG     0X0
-0000   2???           00050     GOTO    MAIN    ; El programa comienza en la direccion 0 y salta a la rutina principal MAIN.
-                      00051 ; --------------------------------------------
-                      00052     ORG     0X04
-0004   2???           00053     GOTO    ISR     ; Si ocurre una interrupcion, el programa salta a la rutina ISR.
-                      00054 ; --------------------------------------------
-                      00055     ORG 0X05
-0005                  00056 MAIN:
-0005   01A0           00057     CLRF        INGRESAR    ; -- Limpieza de Banderas
-0006   01A1           00058     CLRF        TEMPREF
-0007   01AD           00059     CLRF        FLAG_1SEG
-0008   01AE           00060     CLRF        FLAG_ADC_OK
-0009   01AF           00061     CLRF        FLAG_TX
-000A   01A5           00062     CLRF        DIGITO_0        
-000B   01A6           00063     CLRF        DIGITO_1     
-000C   01A7           00064     CLRF        DISPLAY_FLAG
-                      00065 
-000D   1683 1303      00066     BANKSEL     TRISD       ; -- Configuracion de Puertos
-000F   30F0           00067     MOVLW       B'11110000' ; RD7-RD4 Entradas (filas), RD3-RD0 Filas (columnas)
+  0000002B            00042 DIG1 EQU 0X2B        ; Primer dígito temporal
+  0000002C            00043 WREG_TEMP EQU 0X2C   ; Variable temporal para cálculos
+  0000002D            00044 WREG_TEMP2 EQU 0X2D  ; Variable temporal para cálulos
+  0000002E            00045 TEMPACTUAL EQU 0X2E  ;Temperatura actual
+                      00046 
+                      00047 ; Para guardar contexto
+  00000070            00048 WTEMP   EQU 0X70
+  00000071            00049 STATUST EQU 0X71
+                      00050 ; --------------------------------------------
+                      00051     ORG     0X0
+0000   2???           00052     GOTO    MAIN    ; El programa comienza en la direccion 0 y salta a la rutina principal MAIN.
+                      00053 ; --------------------------------------------
+                      00054     ORG     0X04
+0004   2???           00055     GOTO    ISR     ; Si ocurre una interrupcion, el programa salta a la rutina ISR.
+                      00056 ; --------------------------------------------
+                      00057     ORG 0X05
+0005                  00058 MAIN:
+0005   01A0           00059     CLRF        INGRESAR    ; -- Limpieza de Banderas
+0006   01A1           00060     CLRF        TEMPREF
+0007   01A5           00061     CLRF        FLAG
+                      00062 ;    CLRF        FLAG_1SEG   ;FLAG,B0
+                      00063 ;    CLRF        FLAG_ADC_OK ;FLAG,B1
+                      00064 ;    CLRF        FLAG_TX     ;FLAG,B2
+0008   01A6           00065     CLRF        DIGITO_0        
+0009   01A7           00066     CLRF        DIGITO_1     
+                      00067 ;    CLRF        DISPLAY_FLAG ;FLAG,B3
+                      00068 
+000A   1683 1303      00069     BANKSEL     TRISD       ; -- Configuracion de Puertos
+000C   30F0           00070     MOVLW       B'11110000' ; RD7-RD4 Entradas (filas), RD3-RD0 Filas (columnas)
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0010   0088           00068     MOVWF       TRISD
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0011   0187           00069     CLRF        TRISC       ; Display segmentos como salida
-0012   3001           00070     MOVLW       B'00000001' ; Configura el puerto B: RBO para el pulsador y RB1 -RB2 los habilitadores d
+000D   0088           00071     MOVWF       TRISD
+                      00072     ;CLRF        TRISC       ; Display segmentos como salida
+000E   3001           00073     MOVLW       B'00000001' ; Configura el puerto B: RBO para el pulsador y RB1 -RB2 los habilitadores d
                             el display.
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0013   0086           00071     MOVWF       TRISB
+000F   0086           00074     MOVWF       TRISB
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0014   1409           00072     BSF         TRISE,RE0   ; Configura el puerto E: RE0 como entrada analogica para el sensor y RE1 com
+0010   1409           00075     BSF         TRISE,RE0   ; Configura el puerto E: RE0 como entrada analogica para el sensor y RE1 com
                             o salida para el LED.
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0015   1089           00073     BCF         TRISE,RE1   
+0011   1089           00076     BCF         TRISE,RE1   
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0016   0185           00074     CLRF        TRISA       ; Configura el puerto A como salida para enviar datos al display.
-0017   1283 1303      00075     BANKSEL     PORTA
-0019   0188           00076     CLRF        PORTD        ; Asegura que columnas inician en 0
-001A   0186           00077     CLRF        PORTB
-001B   0189           00078     CLRF        PORTE
-001C   0185           00079     CLRF        PORTA
-001D   1683 1703      00080     BANKSEL     ANSELH      ; Configura RB0 como entrada digital (no analógica).
+0012   0185           00077     CLRF        TRISA       ; Configura el puerto A como salida para enviar datos al display.
+0013   1283 1303      00078     BANKSEL     PORTA
+0015   0188           00079     CLRF        PORTD        ; Asegura que columnas inician en 0
+0016   0186           00080     CLRF        PORTB
+0017   0189           00081     CLRF        PORTE
+0018   0185           00082     CLRF        PORTA
+0019   1683 1703      00083     BANKSEL     ANSELH      ; Configura RB0 como entrada digital (no analógica).
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-001F   1209           00081     BCF         ANSELH,ANS12
-                      00082     
-0020   1683 1303      00083     BANKSEL     OSCCON      ; -- Configura el oscilador interno del microcontrolador a 2 MHz.
-0022   3058           00084     MOVLW       B'01011000'
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0023   008F           00085     MOVWF       OSCCON      
-MPASM 5.87                        CODIGO.ASM   6-15-2025  20:57:51         PAGE  3
+001B   1209           00084     BCF         ANSELH,ANS12
+                      00085     
+001C   1683 1303      00086     BANKSEL     OSCCON      ; -- Configura el oscilador interno del microcontrolador a 2 MHz.
+MPASM 5.87                        CODIGO.ASM   6-16-2025  12:28:31         PAGE  3
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00086     
-0024   1283 1303      00087     BANKSEL     ADCON0      ; -- Configuracion del ADC
-0026   3015           00088     MOVLW       B'00010101' ; Canal AN5 (RE0), ADC habilitado pero no convirtiendo 
-0027   009F           00089     MOVWF       ADCON0      ; Frecuencia = Fosc/2 = 1[MHz]
-0028   019E           00090     CLRF        ADRESH      ; Limpio registro donde se guarda la conversion
-0029   1683 1303      00091     BANKSEL     ADCON1
+001E   3058           00087     MOVLW       B'01011000'
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-002B   019F           00092     CLRF        ADCON1      ; Justificado a la izquierda, Vref = VDD-VSS
-                      00093     
-002C   1683 1303      00094     BANKSEL     TXSTA       ; -- Configuracion de la Tx
-002E   3024           00095     MOVLW       B'00100100' ; TXEN=1, BRGH=1 (alta velocidad)
+001F   008F           00088     MOVWF       OSCCON      
+                      00089     
+0020   1283 1303      00090     BANKSEL     ADCON0      ; -- Configuracion del ADC
+0022   3015           00091     MOVLW       B'00010101' ; Canal AN5 (RE0), ADC habilitado pero no convirtiendo 
+0023   009F           00092     MOVWF       ADCON0      ; Frecuencia = Fosc/2 = 1[MHz]
+0024   019E           00093     CLRF        ADRESH      ; Limpio registro donde se guarda la conversion
+0025   1683 1303      00094     BANKSEL     ADCON1
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-002F   0098           00096     MOVWF       TXSTA
-0030   1283 1303      00097     BANKSEL     RCSTA
-0032   3080           00098     MOVLW       B'10000000' ; SPEN=1 habilita transmisor
-0033   0098           00099     MOVWF       RCSTA
-0034   1683 1303      00100     BANKSEL     SPBRG
-0036   300C           00101     MOVLW       .12         ; Baud Rate 9600 con Fosc = 2MHz (BRGH=1): SPBRG=12
+0027   019F           00095     CLRF        ADCON1      ; Justificado a la izquierda, Vref = VDD-VSS
+                      00096     
+0028   1683 1303      00097     BANKSEL     TXSTA       ; -- Configuracion de la Tx
+002A   3024           00098     MOVLW       B'00100100' ; TXEN=1, BRGH=1 (alta velocidad)
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0037   0099           00102     MOVWF       SPBRG
-                      00103     
-0038   1283 1303      00104     BANKSEL     T1CON       ; -- Timer 1
-003A   018E           00105     CLRF        TMR1L
-003B   018F           00106     CLRF        TMR1H
-003C   3030           00107     MOVLW       B'00110000'
-003D   0090           00108     MOVWF       T1CON            ; Inicializa el temporizador TMR1 y lo configura.
-                      00109     
-003E   1283 1303      00110     BANKSEL     INTCON              ; -- Configuracion de Interrupciones y TMR0
-0040   30F0           00111     MOVLW       B'11110000'     ; Habilito GIE - PEIE - T0IE- INTE y limpio bandera INTF
-0041   008B           00112     MOVWF       INTCON 
-0042   018C           00113     CLRF            PIR1                    ; Limpio banderas de ADC - Tx - TRM1iF
-0043   1683 1303      00114     BANKSEL     OPTION_REG
-0045   3097           00115     MOVLW           B'10010111'     ; Flanco de bajada para INT - Frecuencia interna para TMR0 - Prescal
-                            er para TMR0 - 1:256
+002B   0098           00099     MOVWF       TXSTA
+002C   1283 1303      00100     BANKSEL     RCSTA
+002E   3080           00101     MOVLW       B'10000000' ; SPEN=1 habilita transmisor
+002F   0098           00102     MOVWF       RCSTA
+0030   1683 1303      00103     BANKSEL     SPBRG
+0032   300C           00104     MOVLW       .12         ; Baud Rate 9600 con Fosc = 2MHz (BRGH=1): SPBRG=12
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0046   0081           00116     MOVWF           OPTION_REG  
-0047   1683 1303      00117     BANKSEL         PIE1                
-0049   3051           00118     MOVLW       B'01010001'     ; Habilito interrupciones por ADC - TX - TMR1
+0033   0099           00105     MOVWF       SPBRG
+                      00106     
+0034   1283 1303      00107     BANKSEL     T1CON       ; -- Timer 1
+0036   018E           00108     CLRF        TMR1L
+0037   018F           00109     CLRF        TMR1H
+0038   3030           00110     MOVLW       B'00110000'
+0039   0090           00111     MOVWF       T1CON            ; Inicializa el temporizador TMR1 y lo configura.
+                      00112     
+003A   1283 1303      00113     BANKSEL     INTCON              ; -- Configuracion de Interrupciones y TMR0
+003C   30F0           00114     MOVLW       B'11110000'     ; Habilito GIE - PEIE - T0IE- INTE y limpio bandera INTF
+003D   008B           00115     MOVWF       INTCON 
+003E   018C           00116     CLRF            PIR1                    ; Limpio banderas de ADC - Tx - TRM1iF
+003F   1683 1303      00117     BANKSEL     OPTION_REG
+0041   3097           00118     MOVLW           B'10010111'     ; Flanco de bajada para INT - Frecuencia interna para TMR0 - Prescal
+                            er para TMR0 - 1:256 (MODIFICAR EL PRESCALER)
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-004A   008C           00119     MOVWF       PIE1            
-                      00120 
-                      00121     ;Activo TMR1
-004B   1283 1303      00122     BANKSEL     T1CON
-004D   1410           00123     BSF         T1CON,0             
-                      00124 ; --------------------------------------------
-004E                  00125 MAIN_LOOP:                      ; -- Loop Principal
-004E   1820           00126     BTFSC       INGRESAR,0          ; Si está esperando ingreso de número
-004F   2???           00127     CALL        TECLADO             ; Llama a la rutina de teclado
-0050   1820           00128     BTFSC       INGRESAR,0      ; Si sigue esperando ingreso, no hace nada más
-0051   2???           00129     GOTO        MAIN_LOOP
-                      00130 
-0052   182D           00131     BTFSC           FLAG_1SEG, 0    ; Si pasó 1 segundo, inicio conversión ADC
-0053   2???           00132     GOTO        INICIAR_ADC     ; Si no pasó 1 segundo, sigue
-MPASM 5.87                        CODIGO.ASM   6-15-2025  20:57:51         PAGE  4
+0042   0081           00119     MOVWF           OPTION_REG  
+0043   1683 1303      00120     BANKSEL         PIE1                
+0045   3051           00121     MOVLW       B'01010001'     ; Habilito interrupciones por ADC - TX - TMR1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0046   008C           00122     MOVWF       PIE1            
+                      00123 
+                      00124     ;Activo TMR1
+0047   1283 1303      00125     BANKSEL     T1CON
+0049   1410           00126     BSF         T1CON,0             
+                      00127 ; --------------------------------------------
+004A                  00128 MAIN_LOOP:                      ; -- Loop Principal
+004A   1820           00129     BTFSC       INGRESAR,0          ; Si está esperando ingreso de número
+004B   2???           00130     CALL        TECLADO             ; Llama a la rutina de teclado
+004C   1820           00131     BTFSC       INGRESAR,0      ; Si sigue esperando ingreso, no hace nada más
+004D   2???           00132     GOTO        MAIN_LOOP
+MPASM 5.87                        CODIGO.ASM   6-16-2025  12:28:31         PAGE  4
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00133 
-0054   182E           00134     BTFSC       FLAG_ADC_OK, 0  ; Si el ADC finalizó, preparar para transmitir
-0055   2???           00135     GOTO        PREPARAR_TX
-                      00136 
-0056   182F           00137     BTFSC       FLAG_TX, 0      ; Si hay que transmitir, enviar por UART
-0057   2???           00138     GOTO        ENVIAR_UART
-                      00139 
-                      00140     ; Comparación de temperatura actual con la temperatura de referencia para prender el led
-0058   0821           00141     MOVF        TEMPREF,W
-0059   0230           00142     SUBWF       TEMPACTUAL,W
-005A   1803           00143     BTFSC       STATUS,C            ; Si TEMPACTUAL >= TEMPREF
-005B   1489           00144     BSF         PORTE,RE1           ; Enciende LED
-                      00145     ; FALTA: Apagar el LED si TEMPACTUAL < TEMPREF
-005C   1C03           00146     BTFSS       STATUS,C
-005D   1089           00147     BCF         PORTE,RE1
-005E   2???           00148     GOTO        MAIN_LOOP
-                      00149 
-005F                  00150 INICIAR_ADC:
-005F   102D           00151     BCF             FLAG_1SEG, 0        
-0060   1283 1303      00152     BANKSEL         ADCON0
-0062   149F           00153     BSF             ADCON0, GO     ; Iniciar conversión del ADC
-0063   141F           00154     BSF             ADCON0, ADON
-0064   2???           00155     GOTO        MAIN_LOOP
-                      00156 
-0065                  00157 PREPARAR_TX:
-0065   102E           00158     BCF         FLAG_ADC_OK, 0
-0066   142F           00159     BSF         FLAG_TX, 0     ; Listo para enviar por UART
-0067   2???           00160     GOTO        MAIN_LOOP
-                      00161 
-0068                  00162 ENVIAR_UART: ; Enviar TEMPACTUAL por UART como ASCII (2 dígitos)
-0068   0830           00163     MOVF    TEMPACTUAL, W
-0069   00AB           00164     MOVWF   WREG_TEMP
-006A   300A           00165     MOVLW   .10
-006B   00AC           00166     MOVWF   WREG_TEMP2
-006C   01AA           00167     CLRF    DIG1
-                      00168     
-006D                  00169 DIV_LOOP:   ; Dividir por 10 para obtener decena
-006D   082B           00170     MOVF    WREG_TEMP, W
-006E   022C           00171     SUBWF   WREG_TEMP2, W
-006F   1C03           00172     BTFSS   STATUS, C
-0070   2???           00173     GOTO    ENVIAR_DIGITOS
-0071   0FAA           00174     INCFSZ  DIG1, F
-0072   02AB           00175     SUBWF   WREG_TEMP, F
-0073   2???           00176     GOTO    DIV_LOOP
-                      00177 
-0074                  00178 ENVIAR_DIGITOS: ; Enviar decena
-0074   082A           00179     MOVF    DIG1, W
-0075   3E30           00180     ADDLW   '0'
-0076   0099           00181     MOVWF   TXREG
-0077                  00182 ESPERO_TX1:
-0077   1E0C           00183     BTFSS   PIR1,TXIF
-0078   2???           00184     GOTO    ESPERO_TX1
-0079   082B           00185     MOVF    WREG_TEMP, W    ; Enviar unidad
-MPASM 5.87                        CODIGO.ASM   6-15-2025  20:57:51         PAGE  5
+                      00133                 ;FLAG,0    
+004E   1825           00134     BTFSC           FLAG,0   ; Si pasó 1 segundo, inicio conversión ADC
+004F   2???           00135     GOTO        INICIAR_ADC     ; Si no pasó 1 segundo, sigue
+                      00136                 ;FLAG,1
+0050   18A5           00137     BTFSC       FLAG,1  ; Si el ADC finalizó, preparar para transmitir ;FLAG,B1
+0051   2???           00138     GOTO        PREPARAR_TX
+                      00139                 ;FLAG,2
+0052   1925           00140     BTFSC       FLAG,2      ; Si hay que transmitir, enviar por UART
+0053   2???           00141     GOTO        ENVIAR_UART
+                      00142 
+                      00143     ; Comparación de temperatura actual con la temperatura de referencia para prender el led
+0054   0821           00144     MOVF        TEMPREF,W
+0055   022E           00145     SUBWF       TEMPACTUAL,W
+0056   1803           00146     BTFSC       STATUS,C            ; Si TEMPACTUAL >= TEMPREF
+0057   1489           00147     BSF         PORTE,RE1           ; Enciende LED
+                      00148     ; FALTA: Apagar el LED si TEMPACTUAL < TEMPREF
+0058   1C03           00149     BTFSS       STATUS,C
+0059   1089           00150     BCF         PORTE,RE1
+005A   2???           00151     GOTO        MAIN_LOOP
+                      00152 
+005B                  00153 INICIAR_ADC:
+005B   1025           00154     BCF             FLAG,0
+005C   1283 1303      00155     BANKSEL         ADCON0
+005E   149F           00156     BSF             ADCON0, GO     ; Iniciar conversión del ADC
+005F   141F           00157     BSF             ADCON0, ADON
+0060   2???           00158     GOTO        MAIN_LOOP
+                      00159 
+0061                  00160 PREPARAR_TX:
+0061   10A5           00161     BCF         FLAG,1
+0062   1525           00162     BSF         FLAG,2     ; Listo para enviar por UART ;FLAG,2
+0063   2???           00163     GOTO        MAIN_LOOP
+                      00164 
+0064                  00165 ENVIAR_UART: ; Enviar TEMPACTUAL por UART como ASCII (2 dígitos)
+0064   082E           00166     MOVF    TEMPACTUAL, W
+0065   00AC           00167     MOVWF   WREG_TEMP
+0066   300A           00168     MOVLW   .10
+0067   00AD           00169     MOVWF   WREG_TEMP2
+0068   01AB           00170     CLRF    DIG1
+                      00171     
+0069                  00172 DIV_LOOP:   ; Dividir por 10 para obtener decena
+0069   082C           00173     MOVF    WREG_TEMP, W
+006A   022D           00174     SUBWF   WREG_TEMP2, W
+006B   1C03           00175     BTFSS   STATUS, C
+006C   2???           00176     GOTO    ENVIAR_DIGITOS
+006D   0FAB           00177     INCFSZ  DIG1, F
+006E   02AC           00178     SUBWF   WREG_TEMP, F
+006F   2???           00179     GOTO    DIV_LOOP
+                      00180 
+0070                  00181 ENVIAR_DIGITOS: ; Enviar decena
+0070   082B           00182     MOVF    DIG1, W
+0071   3E30           00183     ADDLW   '0'
+0072   0099           00184     MOVWF   TXREG
+0073                  00185 ESPERO_TX1:
+MPASM 5.87                        CODIGO.ASM   6-16-2025  12:28:31         PAGE  5
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-007A   3E30           00186     ADDLW   '0'
-007B   0099           00187     MOVWF   TXREG
-007C                  00188 ESPERO_TX2:
-007C   1E0C           00189     BTFSS   PIR1,TXIF
-007D   2???           00190     GOTO    ESPERO_TX2
-007E   300A           00191     MOVLW   0x0A    ; Agregar salto de línea (LF, 0x0A)
-007F   0099           00192     MOVWF   TXREG
-0080                  00193 ESPERO_TX3:
-0080   1E0C           00194     BTFSS   PIR1,TXIF
-0081   2???           00195     GOTO    ESPERO_TX3
-0082   102F           00196     BCF     FLAG_TX, 0
-0083   2???           00197     GOTO    MAIN_LOOP
-                      00198 ; --------------------------------------------
-0084                  00199 TECLADO:                    ; Subrutina de Teclado
-0084   1283 1303      00200     BANKSEL     PORTD
-0086   300E           00201     MOVLW       0x0E        ; RD3-RD1 en 1 (columnas), RD7-RD4 entradas (filas)
-0087   0488           00202     IORWF       PORTD, F    ; Asegura columnas en 1
-0088   0808           00203     MOVF        PORTD, W    ; Lee filas
-0089   39F0           00204     ANDLW       0xF0        ; Enmascara filas
-008A   1903           00205     BTFSC       STATUS, Z
-008B   2???           00206     GOTO        TECLADO     ; No hay teclas presionadas
-008C   2???           00207     CALL        RETARDO_20ms
-008D   0808           00208     MOVF        PORTD, W
-008E   39F0           00209     ANDLW       0xF0
-008F   1903           00210     BTFSC       STATUS, Z
-0090   2???           00211     GOTO        TECLADO     ; No hay teclas presionadas
-0091   2???           00212     CALL        ESCANEAR_TECLAS
-0092   0822           00213     MOVF        INDICE, W
-0093   3C0B           00214     SUBLW       0x0B        ; Solo índices 0-11 válidos
-0094   1C03           00215     BTFSS       STATUS, C
-0095   0008           00216     RETURN                  ; No válido
-0096   0822           00217     MOVF        INDICE, W
-0097   2???           00218     CALL        TECLAS
-0098   00AB           00219     MOVWF       WREG_TEMP
-0099   082B           00220     MOVF        WREG_TEMP, W
-009A   3AFF           00221     XORLW       0xFF
-009B   1903           00222     BTFSC       STATUS, Z
-009C   0008           00223     RETURN      ; Si es 0xFF, no hacer nada
-009D   1CA0           00224     BTFSS       INGRESAR, 1
-009E   2???           00225     GOTO        TECLADO_PRIMER_DIGITO
-009F   2???           00226     CALL        TECLADO_SEGUNDO_DIGITO
-00A0   0008           00227     RETURN
-                      00228 
-00A1                  00229 TECLADO_SEGUNDO_DIGITO:
-00A1   082A           00230     MOVF    DIG1, W
-00A2   00A1           00231     MOVWF   TEMPREF
-00A3   082A           00232     MOVF    DIG1, W
-00A4   0D2B           00233     RLF     WREG_TEMP, W
-00A5   07A1           00234     ADDWF   TEMPREF, F
-00A6   0821           00235     MOVF    TEMPREF, W
-00A7   0D2B           00236     RLF     WREG_TEMP, W
-00A8   07A1           00237     ADDWF   TEMPREF, F
-00A9   082A           00238     MOVF    DIG1, W
-MPASM 5.87                        CODIGO.ASM   6-15-2025  20:57:51         PAGE  6
+0073   1E0C           00186     BTFSS   PIR1,TXIF
+0074   2???           00187     GOTO    ESPERO_TX1
+0075   082C           00188     MOVF    WREG_TEMP, W    ; Enviar unidad
+0076   3E30           00189     ADDLW   '0'
+0077   0099           00190     MOVWF   TXREG
+0078                  00191 ESPERO_TX2:
+0078   1E0C           00192     BTFSS   PIR1,TXIF
+0079   2???           00193     GOTO    ESPERO_TX2
+007A   300A           00194     MOVLW   0x0A    ; Agregar salto de línea (LF, 0x0A)
+007B   0099           00195     MOVWF   TXREG
+007C                  00196 ESPERO_TX3:
+007C   1E0C           00197     BTFSS   PIR1,TXIF
+007D   2???           00198     GOTO    ESPERO_TX3
+007E   1125           00199     BCF     FLAG,2
+007F   2???           00200     GOTO    MAIN_LOOP
+                      00201 ; --------------------------------------------
+0080                  00202 TECLADO:                    ; Subrutina de Teclado
+0080   1283 1303      00203     BANKSEL     PORTD
+0082   300E           00204     MOVLW       0x0E        ; RD3-RD1 en 1 (columnas), RD7-RD4 entradas (filas)
+0083   0488           00205     IORWF       PORTD, F    ; Asegura columnas en 1
+0084   0808           00206     MOVF        PORTD, W    ; Lee filas
+0085   39F0           00207     ANDLW       0xF0        ; Enmascara filas
+0086   1903           00208     BTFSC       STATUS, Z
+0087   2???           00209     GOTO        TECLADO     ; No hay teclas presionadas
+0088   2???           00210     CALL        RETARDO_20ms
+0089   0808           00211     MOVF        PORTD, W
+008A   39F0           00212     ANDLW       0xF0
+008B   1903           00213     BTFSC       STATUS, Z
+008C   2???           00214     GOTO        TECLADO     ; No hay teclas presionadas
+008D   2???           00215     CALL        ESCANEAR_TECLAS
+008E   0822           00216     MOVF        INDICE, W
+008F   3C0B           00217     SUBLW       0x0B        ; Solo índices 0-11 válidos
+0090   1C03           00218     BTFSS       STATUS, C
+0091   0008           00219     RETURN                  ; No válido
+0092   0822           00220     MOVF        INDICE, W
+0093   2???           00221     CALL        TECLAS
+0094   00AC           00222     MOVWF       WREG_TEMP
+0095   082C           00223     MOVF        WREG_TEMP, W
+0096   3AFF           00224     XORLW       0xFF
+0097   1903           00225     BTFSC       STATUS, Z
+0098   0008           00226     RETURN      ; Si es 0xFF, no hacer nada
+0099   1CA0           00227     BTFSS       INGRESAR, 1
+009A   2???           00228     GOTO        TECLADO_PRIMER_DIGITO
+009B   2???           00229     CALL        TECLADO_SEGUNDO_DIGITO
+009C   0008           00230     RETURN
+                      00231 
+009D                  00232 TECLADO_SEGUNDO_DIGITO:
+009D   082B           00233     MOVF    DIG1, W
+009E   00A1           00234     MOVWF   TEMPREF
+009F   082B           00235     MOVF    DIG1, W
+00A0   0D2C           00236     RLF     WREG_TEMP, W
+00A1   07A1           00237     ADDWF   TEMPREF, F
+00A2   0821           00238     MOVF    TEMPREF, W
+MPASM 5.87                        CODIGO.ASM   6-16-2025  12:28:31         PAGE  6
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-00AA   07A1           00239     ADDWF   TEMPREF, F
-00AB   082B           00240     MOVF    WREG_TEMP, W
-00AC   07A1           00241     ADDWF   TEMPREF, F
-00AD   2???           00242     CALL    ACTUALIZAR_DISPLAY
-00AE   1020           00243     BCF     INGRESAR, 0
-00AF   10A0           00244     BCF     INGRESAR, 1
-00B0   0008           00245     RETURN
-                      00246 
-00B1                  00247 TECLADO_PRIMER_DIGITO:
-00B1   082B           00248     MOVF    WREG_TEMP, W
-00B2   00AA           00249     MOVWF   DIG1
-00B3   14A0           00250     BSF     INGRESAR, 1
-00B4   2???           00251     GOTO    TECLADO
-                      00252 
-00B5                  00253 ESCANEAR_TECLAS:
-00B5   01A3           00254     CLRF    COL
-00B6   3002           00255     MOVLW   0x02            ; RD1 (columna 1)
-00B7   00A4           00256     MOVWF   COLMASK
-00B8                  00257 SCAN_COL_LOOP:
-00B8   300E           00258     MOVLW   0x0E            ; RD3-RD1 en 1
-00B9   0488           00259     IORWF   PORTD, F
-00BA   0924           00260     COMF    COLMASK, W      ; Columna activa en 0
-00BB   390E           00261     ANDLW   0x0E            ; Solo columnas
-00BC   38F0           00262     IORLW   0xF0            ; Filas en 1
-00BD   0088           00263     MOVWF   PORTD
-00BE   0000           00264     NOP
-00BF   0000           00265     NOP
-00C0   0808           00266     MOVF    PORTD, W
-00C1   39F0           00267     ANDLW   0xF0
-00C2   3AF0           00268     XORLW   0xF0
-00C3   1903           00269     BTFSC   STATUS, Z
-00C4   2???           00270     GOTO    NEXT_COL
-00C5   0808           00271     MOVF    PORTD, W
-00C6   39F0           00272     ANDLW   0xF0
-00C7   3AF0           00273     XORLW   0xF0
-00C8   00AB           00274     MOVWF   WREG_TEMP
-00C9   01A2           00275     CLRF    INDICE
-00CA   3080           00276     MOVLW   0x80            ; RD7 (fila 1)
-00CB   00AC           00277     MOVWF   WREG_TEMP2
-00CC                  00278 SCAN_ROW_LOOP:
-00CC   082B           00279     MOVF    WREG_TEMP, W
-00CD   052C           00280     ANDWF   WREG_TEMP2, W
-00CE   1D03           00281     BTFSS   STATUS, Z
-00CF   2???           00282     GOTO    FOUND_ROW
-00D0   0AA2           00283     INCF    INDICE, F
-00D1   0CAC           00284     RRF     WREG_TEMP2, F   ; Siguiente fila (RD7->RD6->RD5->RD4)
-00D2   082C           00285     MOVF    WREG_TEMP2, W
-00D3   1903           00286     BTFSC   STATUS, Z
-00D4   2???           00287     GOTO    NEXT_COL
-00D5   2???           00288     GOTO    SCAN_ROW_LOOP
-00D6                  00289 FOUND_ROW:
-                      00290     ; INDICE = número de fila (0-3)
-                      00291     ; Calcula índice físico: INDICE = fila*3 + (columna-1)
-MPASM 5.87                        CODIGO.ASM   6-15-2025  20:57:51         PAGE  7
+00A3   0D2C           00239     RLF     WREG_TEMP, W
+00A4   07A1           00240     ADDWF   TEMPREF, F
+00A5   082B           00241     MOVF    DIG1, W
+00A6   07A1           00242     ADDWF   TEMPREF, F
+00A7   082C           00243     MOVF    WREG_TEMP, W
+00A8   07A1           00244     ADDWF   TEMPREF, F
+00A9   2???           00245     CALL    ACTUALIZAR_DISPLAY
+00AA   1020           00246     BCF     INGRESAR, 0
+00AB   10A0           00247     BCF     INGRESAR, 1
+00AC   0008           00248     RETURN
+                      00249 
+00AD                  00250 TECLADO_PRIMER_DIGITO:
+00AD   082C           00251     MOVF    WREG_TEMP, W
+00AE   00AB           00252     MOVWF   DIG1
+00AF   14A0           00253     BSF     INGRESAR, 1
+00B0   2???           00254     GOTO    TECLADO
+                      00255 
+00B1                  00256 ESCANEAR_TECLAS:
+00B1   01A3           00257     CLRF    COL
+00B2   3002           00258     MOVLW   0x02            ; RD1 (columna 1)
+00B3   00A4           00259     MOVWF   COLMASK
+00B4                  00260 SCAN_COL_LOOP:
+00B4   300E           00261     MOVLW   0x0E            ; RD3-RD1 en 1
+00B5   0488           00262     IORWF   PORTD, F
+00B6   0924           00263     COMF    COLMASK, W      ; Columna activa en 0
+00B7   390E           00264     ANDLW   0x0E            ; Solo columnas
+00B8   38F0           00265     IORLW   0xF0            ; Filas en 1
+00B9   0088           00266     MOVWF   PORTD
+00BA   0000           00267     NOP
+00BB   0000           00268     NOP
+00BC   0808           00269     MOVF    PORTD, W
+00BD   39F0           00270     ANDLW   0xF0
+00BE   3AF0           00271     XORLW   0xF0
+00BF   1903           00272     BTFSC   STATUS, Z
+00C0   2???           00273     GOTO    NEXT_COL
+00C1   0808           00274     MOVF    PORTD, W
+00C2   39F0           00275     ANDLW   0xF0
+00C3   3AF0           00276     XORLW   0xF0
+00C4   00AC           00277     MOVWF   WREG_TEMP
+00C5   01A2           00278     CLRF    INDICE
+00C6   3080           00279     MOVLW   0x80            ; RD7 (fila 1)
+00C7   00AD           00280     MOVWF   WREG_TEMP2
+00C8                  00281 SCAN_ROW_LOOP:
+00C8   082C           00282     MOVF    WREG_TEMP, W
+00C9   052D           00283     ANDWF   WREG_TEMP2, W
+00CA   1D03           00284     BTFSS   STATUS, Z
+00CB   2???           00285     GOTO    FOUND_ROW
+00CC   0AA2           00286     INCF    INDICE, F
+00CD   0CAD           00287     RRF     WREG_TEMP2, F   ; Siguiente fila (RD7->RD6->RD5->RD4)
+00CE   082D           00288     MOVF    WREG_TEMP2, W
+00CF   1903           00289     BTFSC   STATUS, Z
+00D0   2???           00290     GOTO    NEXT_COL
+00D1   2???           00291     GOTO    SCAN_ROW_LOOP
+MPASM 5.87                        CODIGO.ASM   6-16-2025  12:28:31         PAGE  7
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-00D6   0822           00292     MOVF    INDICE, W
-00D7   00AC           00293     MOVWF   WREG_TEMP2
-00D8   0DAC           00294     RLF     WREG_TEMP2, F   ; *2
-00D9   0722           00295     ADDWF   INDICE, W       ; W = fila*3 + fila
-00DA   0823           00296     MOVF    COL, W
-00DB   072C           00297     ADDWF   WREG_TEMP2, W   ; W = fila*3 + columna
-00DC   00A2           00298     MOVWF   INDICE
-00DD   0008           00299     RETURN
-00DE                  00300 NEXT_COL:
-00DE   0AA3           00301     INCF    COL, F
-00DF   3003           00302     MOVLW   0x03
-00E0   0223           00303     SUBWF   COL, W
-00E1   1D03           00304     BTFSS   STATUS, Z
-00E2   0DA4           00305     RLF     COLMASK, F
-00E3   2???           00306     GOTO    SCAN_COL_LOOP
-00E4   30FF           00307     MOVLW   0xFF            ; No se detectó tecla
-00E5   00A2           00308     MOVWF   INDICE
-00E6   0008           00309     RETURN
-00E7                  00310 TECLAS:
-00E7   0782           00311     ADDWF   PCL, F
-00E8   34FF           00312     RETLW   0xFF    ; 0: * (fila 1, col 1)
-00E9   3400           00313     RETLW   0x00    ; 1: 0 (fila 1, col 2)
-00EA   34FF           00314     RETLW   0xFF    ; 2: # (fila 1, col 3)
-00EB   3407           00315     RETLW   0x07    ; 3: 7 (fila 2, col 1)
-00EC   3408           00316     RETLW   0x08    ; 4: 8 (fila 2, col 2)
-00ED   3409           00317     RETLW   0x09    ; 5: 9 (fila 2, col 3)
-00EE   3404           00318     RETLW   0x04    ; 6: 4 (fila 3, col 1)
-00EF   3405           00319     RETLW   0x05    ; 7: 5 (fila 3, col 2)
-00F0   3406           00320     RETLW   0x06    ; 8: 6 (fila 3, col 3)
-00F1   3401           00321     RETLW   0x01    ; 9: 1 (fila 4, col 1)
-00F2   3402           00322     RETLW   0x02    ; 10: 2 (fila 4, col 2)
-00F3   3403           00323     RETLW   0x03    ; 11: 3 (fila 4, col 3)
-                      00324     ; Eliminado el índice 12, ya que solo hay 12 teclas en 4x3
-                      00325 
-                      00326 ;----------------------------------------------------------
-                      00327 ;Subrutina del display
-                      00328 ;------------------------------------------------------------------------
-00F4                  00329 ACTUALIZAR_DISPLAY:
-00F4   0830           00330     MOVF    TEMPACTUAL, W ; o TEMPREF
-00F5   00AB           00331     MOVWF   WREG_TEMP
-00F6   300A           00332     MOVLW   .10
-00F7   00AC           00333     MOVWF   WREG_TEMP2
-00F8   01A6           00334     CLRF    DIGITO_1
-00F9                  00335 BUCLE_RESTA:
-00F9   022B           00336     SUBWF   WREG_TEMP, W
-00FA   1C03           00337     BTFSS   STATUS, C
-00FB   2???           00338     GOTO    GUARDAR_UNIDAD
-00FC   0AA6           00339     INCF    DIGITO_1, F
-00FD   082B           00340     MOVF    WREG_TEMP, W
-00FE   022C           00341     SUBWF   WREG_TEMP2, W
-00FF   00AB           00342     MOVWF   WREG_TEMP
-0100   2???           00343     GOTO    BUCLE_RESTA
-0101                  00344 GUARDAR_UNIDAD:
-MPASM 5.87                        CODIGO.ASM   6-15-2025  20:57:51         PAGE  8
+00D2                  00292 FOUND_ROW:
+                      00293     ; INDICE = número de fila (0-3)
+                      00294     ; Calcula índice físico: INDICE = fila*3 + (columna-1)
+00D2   0822           00295     MOVF    INDICE, W
+00D3   00AD           00296     MOVWF   WREG_TEMP2
+00D4   0DAD           00297     RLF     WREG_TEMP2, F   ; *2
+00D5   0722           00298     ADDWF   INDICE, W       ; W = fila*3 + fila
+00D6   0823           00299     MOVF    COL, W
+00D7   072D           00300     ADDWF   WREG_TEMP2, W   ; W = fila*3 + columna
+00D8   00A2           00301     MOVWF   INDICE
+00D9   0008           00302     RETURN
+00DA                  00303 NEXT_COL:
+00DA   0AA3           00304     INCF    COL, F
+00DB   3003           00305     MOVLW   0x03
+00DC   0223           00306     SUBWF   COL, W
+00DD   1D03           00307     BTFSS   STATUS, Z
+00DE   0DA4           00308     RLF     COLMASK, F
+00DF   2???           00309     GOTO    SCAN_COL_LOOP
+00E0   30FF           00310     MOVLW   0xFF            ; No se detectó tecla
+00E1   00A2           00311     MOVWF   INDICE
+00E2   0008           00312     RETURN
+00E3                  00313 TECLAS:
+00E3   0782           00314     ADDWF   PCL, F
+00E4   34FF           00315     RETLW   0xFF    ; 0: * (fila 1, col 1)
+00E5   3400           00316     RETLW   0x00    ; 1: 0 (fila 1, col 2)
+00E6   34FF           00317     RETLW   0xFF    ; 2: # (fila 1, col 3)
+00E7   3407           00318     RETLW   0x07    ; 3: 7 (fila 2, col 1)
+00E8   3408           00319     RETLW   0x08    ; 4: 8 (fila 2, col 2)
+00E9   3409           00320     RETLW   0x09    ; 5: 9 (fila 2, col 3)
+00EA   3404           00321     RETLW   0x04    ; 6: 4 (fila 3, col 1)
+00EB   3405           00322     RETLW   0x05    ; 7: 5 (fila 3, col 2)
+00EC   3406           00323     RETLW   0x06    ; 8: 6 (fila 3, col 3)
+00ED   3401           00324     RETLW   0x01    ; 9: 1 (fila 4, col 1)
+00EE   3402           00325     RETLW   0x02    ; 10: 2 (fila 4, col 2)
+00EF   3403           00326     RETLW   0x03    ; 11: 3 (fila 4, col 3)
+                      00327     ; Eliminado el índice 12, ya que solo hay 12 teclas en 4x3
+                      00328 
+                      00329 ;----------------------------------------------------------
+                      00330 ;Subrutina del display
+                      00331 ;------------------------------------------------------------------------
+00F0                  00332 ACTUALIZAR_DISPLAY:
+00F0   082E           00333     MOVF    TEMPACTUAL, W ; o TEMPREF
+00F1   00AC           00334     MOVWF   WREG_TEMP
+00F2   300A           00335     MOVLW   .10
+00F3   00AD           00336     MOVWF   WREG_TEMP2
+00F4   01A7           00337     CLRF    DIGITO_1
+00F5                  00338 BUCLE_RESTA:
+00F5   022C           00339     SUBWF   WREG_TEMP, W
+00F6   1C03           00340     BTFSS   STATUS, C
+00F7   2???           00341     GOTO    GUARDAR_UNIDAD
+00F8   0AA7           00342     INCF    DIGITO_1, F
+00F9   082C           00343     MOVF    WREG_TEMP, W
+00FA   022D           00344     SUBWF   WREG_TEMP2, W
+MPASM 5.87                        CODIGO.ASM   6-16-2025  12:28:31         PAGE  8
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-0101   082B           00345     MOVF    WREG_TEMP, W
-0102   00A5           00346     MOVWF   DIGITO_0
-0103   0008           00347     RETURN
-                      00348 ; --------------------------------------------
-0104                  00349 RETARDO_20ms:           ; Rutina de retardo aproximado de 20 ms usando bucles anidados.
-0104   300A           00350     MOVLW       .10
-0105   00A8           00351     MOVWF       CONT0
-0106   30FA           00352 L2  MOVLW       .250
-0107   00A9           00353     MOVWF       CONT1
-0108   0000           00354 L1  NOP             
-0109   0BA9           00355     DECFSZ      CONT1, 1
-010A   2???           00356     GOTO        L1
-010B   0BA8           00357     DECFSZ      CONT0,1
-010C   2???           00358     GOTO        L2
-010D   0008           00359     RETURN
-                      00360 ;-----------------------------------------------------------------------------
-010E                  00361 TABLA_7SEG:
-010E   34C0           00362     RETLW   B'11000000' ; 0
-010F   34F9           00363     RETLW   B'11111001' ; 1
-0110   34A4           00364     RETLW   B'10100100' ; 2
-0111   34B0           00365     RETLW   B'10110000' ; 3
-0112   3499           00366     RETLW   B'10011001' ; 4
-0113   3492           00367     RETLW   B'10010010' ; 5
-0114   3482           00368     RETLW   B'10000010' ; 6
-0115   34F8           00369     RETLW   B'11111000' ; 7
-0116   3480           00370     RETLW   B'10000000' ; 8
-0117   3490           00371     RETLW   B'10010000' ; 9
-                      00372 ; --------------------------------------------
-0118                  00373 ISR:                    ; Rutina principal de atención a interrupciones: verifica la fuente y salta a l
+00FB   00AC           00345     MOVWF   WREG_TEMP
+00FC   2???           00346     GOTO    BUCLE_RESTA
+00FD                  00347 GUARDAR_UNIDAD:
+00FD   082C           00348     MOVF    WREG_TEMP, W
+00FE   00A6           00349     MOVWF   DIGITO_0
+00FF   0008           00350     RETURN
+                      00351 ; --------------------------------------------
+0100                  00352 RETARDO_20ms:           ; Rutina de retardo aproximado de 20 ms usando bucles anidados.
+0100   300A           00353     MOVLW       .10
+0101   00A9           00354     MOVWF       CONT0
+0102   30FA           00355 L2  MOVLW       .250
+0103   00AA           00356     MOVWF       CONT1
+0104   0000           00357 L1  NOP             
+0105   0BAA           00358     DECFSZ      CONT1, 1
+0106   2???           00359     GOTO        L1
+0107   0BA9           00360     DECFSZ      CONT0,1
+0108   2???           00361     GOTO        L2
+0109   0008           00362     RETURN
+                      00363 ;-----------------------------------------------------------------------------
+010A                  00364 TABLA_7SEG: ;Complementar
+Warning[202]: Argument out of range.  Least significant bits used.
+010A   0702           00365     ADDWF   PCL,PCL
+010B   34C0           00366     RETLW   B'11000000' ; 0
+010C   34F9           00367     RETLW   B'11111001' ; 1
+010D   34A4           00368     RETLW   B'10100100' ; 2
+010E   34B0           00369     RETLW   B'10110000' ; 3
+010F   3499           00370     RETLW   B'10011001' ; 4
+0110   3492           00371     RETLW   B'10010010' ; 5
+0111   3482           00372     RETLW   B'10000010' ; 6
+0112   34F8           00373     RETLW   B'11111000' ; 7
+0113   3480           00374     RETLW   B'10000000' ; 8
+0114   3490           00375     RETLW   B'10010000' ; 9
+                      00376 ; --------------------------------------------
+0115                  00377 ISR:                    ; Rutina principal de atención a interrupciones: verifica la fuente y salta a l
                             a rutina correspondiente.
-0118   00F0           00374     MOVWF   WTEMP       ;Guardo el contexto previo a la interrupcion
-0119   0E03           00375     SWAPF   STATUS,W
-011A   00F1           00376     MOVWF   STATUST
-011B   190B           00377     BTFSC   INTCON, T0IF  ;Testeo del Timer0
-011C   2???           00378     GOTO    ISR_TMR0   
-011D   1283 1303      00379     BANKSEL PIR1        ; Testeo de banderas
-011F   188B           00380     BTFSC   INTCON,INTF ; Bandera del Pulsador
-0120   2???           00381     GOTO    ISR_RB0
-0121   180C           00382     BTFSC   PIR1,TMR1IF  ; Bandera del TMR1
-0122   2???           00383     GOTO    ISR_TMR1
-0123   1B0C           00384     BTFSC   PIR1,ADIF   ; Bandera del ADC
-0124   2???           00385     GOTO    ISR_ADC
-0125   1A0C           00386     BTFSC   PIR1,TXIF   ;Bandera de Tx
-0126   2???           00387     GOTO    ISR_TRANSMICION 
-0127   2???           00388     GOTO    SALIR
-                      00389 ; --------------------------------------------
-0128                  00390 ISR_TMR0:
-0128   110B           00391     BCF     INTCON, T0IF
-0129   1005           00392     BCF     PORTA, 0
-012A   1085           00393     BCF     PORTA, 1
-012B   0827           00394     MOVF    DISPLAY_FLAG, W
-012C   1903           00395     BTFSC   STATUS, Z
-012D   2???           00396     GOTO    MUX_DISPLAY_1
-MPASM 5.87                        CODIGO.ASM   6-15-2025  20:57:51         PAGE  9
+0115   00F0           00378     MOVWF   WTEMP       ;Guardo el contexto previo a la interrupcion
+0116   0E03           00379     SWAPF   STATUS,W
+0117   00F1           00380     MOVWF   STATUST
+0118   190B           00381     BTFSC   INTCON, T0IF  ;Testeo del Timer0
+0119   2???           00382     GOTO    ISR_TMR0   
+011A   1283 1303      00383     BANKSEL PIR1        ; Testeo de banderas
+011C   188B           00384     BTFSC   INTCON,INTF ; Bandera del Pulsador
+011D   2???           00385     GOTO    ISR_RB0
+011E   180C           00386     BTFSC   PIR1,TMR1IF  ; Bandera del TMR1
+011F   2???           00387     GOTO    ISR_TMR1
+0120   1B0C           00388     BTFSC   PIR1,ADIF   ; Bandera del ADC
+0121   2???           00389     GOTO    ISR_ADC
+0122   1A0C           00390     BTFSC   PIR1,TXIF   ;Bandera de Tx
+0123   2???           00391     GOTO    ISR_TRANSMICION 
+0124   2???           00392     GOTO    SALIR
+                      00393 ; --------------------------------------------
+0125                  00394 ISR_TMR0:
+0125   110B           00395     BCF     INTCON, T0IF
+MPASM 5.87                        CODIGO.ASM   6-16-2025  12:28:31         PAGE  9
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00397     ; Mostrar unidad
-012E   0825           00398     MOVF    DIGITO_0, W
-012F   2???           00399     CALL    TABLA_7SEG
-0130   0087           00400     MOVWF   PORTC
-0131   1485           00401     BSF     PORTA, 1
-0132   01A7           00402     CLRF    DISPLAY_FLAG
-0133   2???           00403     GOTO    SALIR
-0134                  00404 MUX_DISPLAY_1:
-0134   0826           00405     MOVF    DIGITO_1, W
-0135   2???           00406     CALL    TABLA_7SEG
-0136   0087           00407     MOVWF   PORTC
-0137   1405           00408     BSF     PORTA, 0
-0138   3001           00409     MOVLW   0x01
-0139   00A7           00410     MOVWF   DISPLAY_FLAG
-013A   2???           00411     GOTO    SALIR
-                      00412 ;----------------------------------------------
-013B                  00413 ISR_RB0     ; Atiende la interrupción por el pulsador en RB0 y conmuta la bandera de ingreso.
-013B   108B           00414     BCF     INTCON,INTF
-013C   1283 1303      00415     BANKSEL INGRESAR
-013E   3001           00416     MOVLW   .1
-013F   06A0           00417     XORWF   INGRESAR,F   ;si estaba en 1 pasa a 0, si estaba en 0 pasa a 1
-0140   2???           00418     GOTO    SALIR
-                      00419 ; --------------------------------------------
-0141                  00420 ISR_TMR1:   ; Atiende la interrupción del temporizador 1 y activa la bandera de 1 segundo.
-0141   100C           00421     BCF     PIR1,TMR1IF
-0142   142D           00422     BSF     FLAG_1SEG,0
-0143   2???           00423     GOTO    SALIR
-                      00424 ; --------------------------------------------
-0144                  00425 ISR_ADC:    ; Atiende la interrupción del ADC y limpia la bandera correspondiente.
-0144   130C           00426     BCF     PIR1,ADIF
-0145   1283 1303      00427     BANKSEL ADRESH
-0147   081E           00428     MOVF    ADRESH, W           ; Leemos solo ADRESH (justificado a la izquierda)
-0148   00B0           00429     MOVWF   TEMPACTUAL          ; Guardamos la temperatura
-0149   2???           00430     CALL    ACTUALIZAR_DISPLAY  ; Cada vez que se complete una conversion del ADC se actualizan los disp
+0126   1086           00396     BCF     PORTB, RB1
+0127   1106           00397     BCF     PORTB, RB2
+0128   19A5           00398     BTFSC   FLAG,3
+                      00399 ;    MOVF    DISPLAY_FLAG, W
+                      00400 ;    BTFSC   STATUS, Z
+0129   2???           00401     GOTO    MUX_DISPLAY_1
+                      00402     ; Mostrar unidad
+012A   0826           00403     MOVF    DIGITO_0, W
+012B   2???           00404     CALL    TABLA_7SEG
+012C   0085           00405     MOVWF   PORTA
+012D   1506           00406     BSF     PORTB, RB2
+012E   15A5           00407     BSF     FLAG,3
+                      00408 ;    CLRF    DISPLAY_FLAG
+012F   2???           00409     GOTO    SALIR
+0130                  00410 MUX_DISPLAY_1:
+0130   0827           00411     MOVF    DIGITO_1, W
+0131   2???           00412     CALL    TABLA_7SEG
+0132   0085           00413     MOVWF   PORTA
+0133   1486           00414     BSF     PORTB, RB1
+0134   11A5           00415     BCF     FLAG,3
+                      00416 ;    MOVLW   0x01
+                      00417 ;    MOVWF   DISPLAY_FLAG
+0135   2???           00418     GOTO    SALIR
+                      00419 ;----------------------------------------------
+0136                  00420 ISR_RB0:     ; Atiende la interrupción por el pulsador en RB0 y conmuta la bandera de ingreso.
+0136   108B           00421     BCF     INTCON,INTF
+0137   1283 1303      00422     BANKSEL INGRESAR
+0139   3001           00423     MOVLW   .1
+013A   06A0           00424     XORWF   INGRESAR,F   ;si estaba en 1 pasa a 0, si estaba en 0 pasa a 1
+013B   2???           00425     GOTO    SALIR
+                      00426 ; --------------------------------------------
+013C                  00427 ISR_TMR1:   ; Atiende la interrupción del temporizador 1 y activa la bandera de 1 segundo.
+013C   100C           00428     BCF     PIR1,TMR1IF
+013D   1425           00429     BSF     FLAG,0
+013E   2???           00430     GOTO    SALIR
+                      00431 ; --------------------------------------------
+013F                  00432 ISR_ADC:    ; Atiende la interrupcion del ADC y limpia la bandera correspondiente.
+013F   130C           00433     BCF     PIR1,ADIF
+0140   1283 1303      00434     BANKSEL ADRESH
+0142   081E           00435     MOVF    ADRESH, W           ; Leemos solo ADRESH (justificado a la izquierda)
+0143   00AE           00436     MOVWF   TEMPACTUAL          ; Guardamos la temperatura
+0144   2???           00437     CALL    ACTUALIZAR_DISPLAY  ; Cada vez que se complete una conversion del ADC se actualizan los disp
                             lays *(REVISAR POR LAS DUDAS)*
-014A   142E           00431     BSF     FLAG_ADC_OK, 0
-014B   2???           00432     GOTO    SALIR
-                      00433 ; --------------------------------------------
-014C                  00434 ISR_TRANSMICION:    ; Atiende la interrupción de transmisión y limpia la bandera correspondiente.
-014C   120C           00435     BCF     PIR1,TXIF
-014D   102F           00436     BCF     FLAG_TX, 0
-014E   2???           00437     GOTO    SALIR
-                      00438 ; --------------------------------------------
-014F                  00439 SALIR:    ; Restaura el contexto y retorna de la interrupción.
-014F   0E71           00440     SWAPF   STATUST,W
-0150   00F1           00441     MOVWF   STATUST
-0151   0EF0           00442     SWAPF   WTEMP,F
-0152   0E70           00443     SWAPF   WTEMP,W
-0153   0009           00444     RETFIE
+0145   14A5           00438     BSF     FLAG,1
+0146   2???           00439     GOTO    SALIR
+                      00440 ; --------------------------------------------
+0147                  00441 ISR_TRANSMICION:    ; Interrumpe cuando el buffer esta limpio
+0147   120C           00442     BCF     PIR1,TXIF
+0148   1125           00443     BCF     FLAG,2
+0149   2???           00444     GOTO    SALIR
                       00445 ; --------------------------------------------
-                      00446     END
-MPASM 5.87                        CODIGO.ASM   6-15-2025  20:57:51         PAGE 10
+014A                  00446 SALIR:      ; Restaura el contexto y retorna de la interrupción.
+014A   0E71           00447     SWAPF   STATUST,W
+MPASM 5.87                        CODIGO.ASM   6-16-2025  12:28:31         PAGE 10
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+014B   00F1           00448     MOVWF   STATUST
+014C   0EF0           00449     SWAPF   WTEMP,F
+014D   0E70           00450     SWAPF   WTEMP,W
+014E   0009           00451     RETFIE
+                      00452 ; --------------------------------------------
+                      00453     END
+MPASM 5.87                        CODIGO.ASM   6-16-2025  12:28:31         PAGE 11
 
 
 SYMBOL TABLE
@@ -538,7 +552,7 @@ ABDOVF                            00000007
 ACKDT                             00000005
 ACKEN                             00000004
 ACKSTAT                           00000006
-ACTUALIZAR_DISPLAY                000000F4
+ACTUALIZAR_DISPLAY                000000F0
 ADCON0                            0000001F
 ADCON1                            0000009F
 ADCS0                             00000006
@@ -586,7 +600,7 @@ BRG5                              00000005
 BRG6                              00000006
 BRG7                              00000007
 BRG8                              00000000
-MPASM 5.87                        CODIGO.ASM   6-15-2025  20:57:51         PAGE 11
+MPASM 5.87                        CODIGO.ASM   6-16-2025  12:28:31         PAGE 12
 
 
 SYMBOL TABLE
@@ -594,7 +608,7 @@ SYMBOL TABLE
 
 BRG9                              00000001
 BRGH                              00000002
-BUCLE_RESTA                       000000F9
+BUCLE_RESTA                       000000F5
 C                                 00000000
 C1CH0                             00000000
 C1CH1                             00000001
@@ -645,7 +659,7 @@ CCPR2H                            0000001C
 CCPR2L                            0000001B
 CHS0                              00000002
 CHS1                              00000003
-MPASM 5.87                        CODIGO.ASM   6-15-2025  20:57:51         PAGE 12
+MPASM 5.87                        CODIGO.ASM   6-16-2025  12:28:31         PAGE 13
 
 
 SYMBOL TABLE
@@ -660,8 +674,8 @@ CM2CON0                           00000108
 CM2CON1                           00000109
 COL                               00000023
 COLMASK                           00000024
-CONT0                             00000028
-CONT1                             00000029
+CONT0                             00000029
+CONT1                             0000002A
 CREN                              00000004
 CSRC                              00000007
 D                                 00000005
@@ -671,11 +685,10 @@ DC1B0                             00000004
 DC1B1                             00000005
 DC2B0                             00000004
 DC2B1                             00000005
-DIG1                              0000002A
-DIGITO_0                          00000025
-DIGITO_1                          00000026
-DISPLAY_FLAG                      00000027
-DIV_LOOP                          0000006D
+DIG1                              0000002B
+DIGITO_0                          00000026
+DIGITO_1                          00000027
+DIV_LOOP                          00000069
 D_A                               00000005
 D_NOT_A                           00000005
 ECCPAS                            0000009C
@@ -693,32 +706,30 @@ EEDATH                            0000010E
 EEIE                              00000004
 EEIF                              00000004
 EEPGD                             00000007
-ENVIAR_DIGITOS                    00000074
-ENVIAR_UART                       00000068
-ESCANEAR_TECLAS                   000000B5
-ESPERO_TX1                        00000077
-ESPERO_TX2                        0000007C
-ESPERO_TX3                        00000080
+ENVIAR_DIGITOS                    00000070
+ENVIAR_UART                       00000064
+ESCANEAR_TECLAS                   000000B1
+ESPERO_TX1                        00000073
+ESPERO_TX2                        00000078
+ESPERO_TX3                        0000007C
 F                                 00000001
 FERR                              00000002
-FLAG_1SEG                         0000002D
-FLAG_ADC_OK                       0000002E
-FLAG_TX                           0000002F
-MPASM 5.87                        CODIGO.ASM   6-15-2025  20:57:51         PAGE 13
+FLAG                              00000025
+FOUND_ROW                         000000D2
+FSR                               00000004
+FVREN                             00000000
+MPASM 5.87                        CODIGO.ASM   6-16-2025  12:28:31         PAGE 14
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-FOUND_ROW                         000000D6
-FSR                               00000004
-FVREN                             00000000
 GCEN                              00000007
 GIE                               00000007
 GO                                00000001
 GO_DONE                           00000001
 GO_NOT_DONE                       00000001
-GUARDAR_UNIDAD                    00000101
+GUARDAR_UNIDAD                    000000FD
 HTS                               00000002
 I2C_DATA                          00000005
 I2C_READ                          00000002
@@ -727,7 +738,7 @@ I2C_STOP                          00000004
 INDF                              00000000
 INDICE                            00000022
 INGRESAR                          00000020
-INICIAR_ADC                       0000005F
+INICIAR_ADC                       0000005B
 INTCON                            0000000B
 INTE                              00000004
 INTEDG                            00000006
@@ -745,17 +756,17 @@ IRCF0                             00000004
 IRCF1                             00000005
 IRCF2                             00000006
 IRP                               00000007
-ISR                               00000118
-ISR_ADC                           00000144
-ISR_RB0                           0000013B
-ISR_TMR0                          00000128
-ISR_TMR1                          00000141
-ISR_TRANSMICION                   0000014C
-L1                                00000108
-L2                                00000106
+ISR                               00000115
+ISR_ADC                           0000013F
+ISR_RB0                           00000136
+ISR_TMR0                          00000125
+ISR_TMR1                          0000013C
+ISR_TRANSMICION                   00000147
+L1                                00000104
+L2                                00000102
 LTS                               00000001
 MAIN                              00000005
-MAIN_LOOP                         0000004E
+MAIN_LOOP                         0000004A
 MC1OUT                            00000007
 MC2OUT                            00000006
 MSK                               00000093
@@ -763,18 +774,18 @@ MSK0                              00000000
 MSK1                              00000001
 MSK2                              00000002
 MSK3                              00000003
-MPASM 5.87                        CODIGO.ASM   6-15-2025  20:57:51         PAGE 14
+MSK4                              00000004
+MSK5                              00000005
+MSK6                              00000006
+MPASM 5.87                        CODIGO.ASM   6-16-2025  12:28:31         PAGE 15
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-MSK4                              00000004
-MSK5                              00000005
-MSK6                              00000006
 MSK7                              00000007
-MUX_DISPLAY_1                     00000134
-NEXT_COL                          000000DE
+MUX_DISPLAY_1                     00000130
+NEXT_COL                          000000DA
 NOT_A                             00000005
 NOT_ADDRESS                       00000005
 NOT_BO                            00000000
@@ -821,16 +832,16 @@ PORTC                             00000007
 PORTD                             00000008
 PORTE                             00000009
 PR2                               00000092
-PREPARAR_TX                       00000065
-MPASM 5.87                        CODIGO.ASM   6-15-2025  20:57:51         PAGE 15
+PREPARAR_TX                       00000061
+PRSEN                             00000007
+PS0                               00000000
+PS1                               00000001
+MPASM 5.87                        CODIGO.ASM   6-16-2025  12:28:31         PAGE 16
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-PRSEN                             00000007
-PS0                               00000000
-PS1                               00000001
 PS2                               00000002
 PSA                               00000003
 PSSAC0                            00000002
@@ -881,15 +892,15 @@ RD                                00000000
 RD0                               00000000
 RD1                               00000001
 RD2                               00000002
-MPASM 5.87                        CODIGO.ASM   6-15-2025  20:57:51         PAGE 16
+RD3                               00000003
+RD4                               00000004
+RD5                               00000005
+MPASM 5.87                        CODIGO.ASM   6-16-2025  12:28:31         PAGE 17
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-RD3                               00000003
-RD4                               00000004
-RD5                               00000005
 RD6                               00000006
 RD7                               00000007
 RE0                               00000000
@@ -897,7 +908,7 @@ RE1                               00000001
 RE2                               00000002
 RE3                               00000003
 READ_WRITE                        00000002
-RETARDO_20ms                      00000104
+RETARDO_20ms                      00000100
 RP0                               00000005
 RP1                               00000006
 RSEN                              00000001
@@ -906,10 +917,10 @@ RX9D                              00000000
 R_NOT_W                           00000002
 R_W                               00000002
 S                                 00000003
-SALIR                             0000014F
+SALIR                             0000014A
 SBOREN                            00000004
-SCAN_COL_LOOP                     000000B8
-SCAN_ROW_LOOP                     000000CC
+SCAN_COL_LOOP                     000000B4
+SCAN_ROW_LOOP                     000000C8
 SCKP                              00000004
 SCS                               00000000
 SEN                               00000000
@@ -940,15 +951,15 @@ STATUS                            00000003
 STATUST                           00000071
 STRA                              00000000
 STRB                              00000001
-MPASM 5.87                        CODIGO.ASM   6-15-2025  20:57:51         PAGE 17
+STRC                              00000002
+STRD                              00000003
+STRSYNC                           00000004
+MPASM 5.87                        CODIGO.ASM   6-16-2025  12:28:31         PAGE 18
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-STRC                              00000002
-STRD                              00000003
-STRSYNC                           00000004
 SWDTEN                            00000000
 SYNC                              00000004
 T0CS                              00000005
@@ -967,12 +978,12 @@ T1SYNC                            00000002
 T2CKPS0                           00000000
 T2CKPS1                           00000001
 T2CON                             00000012
-TABLA_7SEG                        0000010E
-TECLADO                           00000084
-TECLADO_PRIMER_DIGITO             000000B1
-TECLADO_SEGUNDO_DIGITO            000000A1
-TECLAS                            000000E7
-TEMPACTUAL                        00000030
+TABLA_7SEG                        0000010A
+TECLADO                           00000080
+TECLADO_PRIMER_DIGITO             000000AD
+TECLADO_SEGUNDO_DIGITO            0000009D
+TECLAS                            000000E3
+TEMPACTUAL                        0000002E
 TEMPREF                           00000021
 TMR0                              00000001
 TMR0IE                            00000005
@@ -999,15 +1010,15 @@ TRISA1                            00000001
 TRISA2                            00000002
 TRISA3                            00000003
 TRISA4                            00000004
-MPASM 5.87                        CODIGO.ASM   6-15-2025  20:57:51         PAGE 18
+TRISA5                            00000005
+TRISA6                            00000006
+TRISA7                            00000007
+MPASM 5.87                        CODIGO.ASM   6-16-2025  12:28:31         PAGE 19
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-TRISA5                            00000005
-TRISA6                            00000006
-TRISA7                            00000007
 TRISB                             00000086
 TRISB0                            00000000
 TRISB1                            00000001
@@ -1058,15 +1069,15 @@ TXSTA                             00000098
 UA                                00000001
 ULPWUE                            00000005
 ULPWUIE                           00000002
-MPASM 5.87                        CODIGO.ASM   6-15-2025  20:57:51         PAGE 19
+ULPWUIF                           00000002
+VCFG0                             00000004
+VCFG1                             00000005
+MPASM 5.87                        CODIGO.ASM   6-16-2025  12:28:31         PAGE 20
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-ULPWUIF                           00000002
-VCFG0                             00000004
-VCFG1                             00000005
 VR0                               00000000
 VR1                               00000001
 VR2                               00000002
@@ -1093,8 +1104,8 @@ WPUB5                             00000005
 WPUB6                             00000006
 WPUB7                             00000007
 WR                                00000001
-WREG_TEMP                         0000002B
-WREG_TEMP2                        0000002C
+WREG_TEMP                         0000002C
+WREG_TEMP2                        0000002D
 WREN                              00000002
 WRERR                             00000003
 WTEMP                             00000070
@@ -1117,15 +1128,15 @@ _CONFIG2                          00002008
 _CPD_OFF                          00003FFF
 _CPD_ON                           00003F7F
 _CP_OFF                           00003FFF
-MPASM 5.87                        CODIGO.ASM   6-15-2025  20:57:51         PAGE 20
+_CP_ON                            00003FBF
+_DEBUG_OFF                        00003FFF
+_DEBUG_ON                         00001FFF
+MPASM 5.87                        CODIGO.ASM   6-16-2025  12:28:31         PAGE 21
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-_CP_ON                            00003FBF
-_DEBUG_OFF                        00003FFF
-_DEBUG_ON                         00001FFF
 _DEVID1                           00002006
 _EC_OSC                           00003FFB
 _EXTRC                            00003FFF
@@ -1172,7 +1183,7 @@ _XT_OSC                           00003FF9
 __16F887                          00000001
 
 Errors   :     0
-Warnings :     0 reported,     0 suppressed
-Messages :    13 reported,     0 suppressed
+Warnings :     1 reported,     0 suppressed
+Messages :    12 reported,     0 suppressed
 
 

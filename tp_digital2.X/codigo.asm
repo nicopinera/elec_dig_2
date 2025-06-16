@@ -28,11 +28,10 @@ COLMASK	    EQU 0X24
 ; B3: Display que se prende - 0 = Display 2 (UNIDAD - RB2) - 1 = Display 1 (DECENA - RB1)
 FLAG	    EQU	0X25
 	    
-	    
 ; Displays
 
 ; Unidad
-DIGITO_0    EQU 0X26     
+DIGITO_0    EQU 0X26
 
 ; Decena
 DIGITO_1    EQU 0X27        
@@ -132,7 +131,7 @@ MAIN_LOOP:                      ; -- Loop Principal
     BTFSC       INGRESAR,0      ; Si sigue esperando ingreso, no hace nada más
     GOTO        MAIN_LOOP
                 ;FLAG,0    
-    BTFSC	    FLAG,0   ; Si pasó 1 segundo, inicio conversión ADC
+    BTFSC	FLAG,0   ; Si pasó 1 segundo, inicio conversión ADC
     GOTO        INICIAR_ADC     ; Si no pasó 1 segundo, sigue
                 ;FLAG,1
     BTFSC       FLAG,1	; Si el ADC finalizó, preparar para transmitir ;FLAG,B1
@@ -362,18 +361,18 @@ L1  NOP
     GOTO        L2
     RETURN
 ;-----------------------------------------------------------------------------
-TABLA_7SEG:
-    ADWF    PCL,PCL
-    RETLW   B'11000000' ; 0
-    RETLW   B'11111001' ; 1
-    RETLW   B'10100100' ; 2
-    RETLW   B'10110000' ; 3
-    RETLW   B'10011001' ; 4
-    RETLW   B'10010010' ; 5
-    RETLW   B'10000010' ; 6
-    RETLW   B'11111000' ; 7
-    RETLW   B'10000000' ; 8
-    RETLW   B'10010000' ; 9
+TABLA_7SEG: ;Catodo Comun (hgfedcba) h=dp
+    ADDWF   PCL,PCL
+    RETLW   B'00111111' ; 0 
+    RETLW   B'00000110' ; 1 
+    RETLW   B'01011011' ; 2 01011011
+    RETLW   B'01001111' ; 3 01001111
+    RETLW   B'01100110' ; 4 01100110
+    RETLW   B'01101101' ; 5 01101101
+    RETLW   B'01111101' ; 6 01111101
+    RETLW   B'00000111' ; 7 00000111
+    RETLW   B'01111111' ; 8 01111111
+    RETLW   B'01101111' ; 9 01101111
 ; --------------------------------------------
 ISR:                    ; Rutina principal de atención a interrupciones: verifica la fuente y salta a la rutina correspondiente.
     MOVWF   WTEMP       ;Guardo el contexto previo a la interrupcion

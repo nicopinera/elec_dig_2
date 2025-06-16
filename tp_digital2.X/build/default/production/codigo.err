@@ -1,13 +1,13 @@
-Message[302] C:\USERS\NICO\DESKTOP\CARPETAS\FACU\DIGITAL 2\ELEC_DIG_2\TP_DIGITAL2.X\CODIGO.ASM 68 : Register in operand not in bank 0.  Ensure that bank bits are correct.
-Message[302] C:\USERS\NICO\DESKTOP\CARPETAS\FACU\DIGITAL 2\ELEC_DIG_2\TP_DIGITAL2.X\CODIGO.ASM 69 : Register in operand not in bank 0.  Ensure that bank bits are correct.
 Message[302] C:\USERS\NICO\DESKTOP\CARPETAS\FACU\DIGITAL 2\ELEC_DIG_2\TP_DIGITAL2.X\CODIGO.ASM 71 : Register in operand not in bank 0.  Ensure that bank bits are correct.
-Message[302] C:\USERS\NICO\DESKTOP\CARPETAS\FACU\DIGITAL 2\ELEC_DIG_2\TP_DIGITAL2.X\CODIGO.ASM 72 : Register in operand not in bank 0.  Ensure that bank bits are correct.
-Message[302] C:\USERS\NICO\DESKTOP\CARPETAS\FACU\DIGITAL 2\ELEC_DIG_2\TP_DIGITAL2.X\CODIGO.ASM 73 : Register in operand not in bank 0.  Ensure that bank bits are correct.
 Message[302] C:\USERS\NICO\DESKTOP\CARPETAS\FACU\DIGITAL 2\ELEC_DIG_2\TP_DIGITAL2.X\CODIGO.ASM 74 : Register in operand not in bank 0.  Ensure that bank bits are correct.
-Message[302] C:\USERS\NICO\DESKTOP\CARPETAS\FACU\DIGITAL 2\ELEC_DIG_2\TP_DIGITAL2.X\CODIGO.ASM 81 : Register in operand not in bank 0.  Ensure that bank bits are correct.
-Message[302] C:\USERS\NICO\DESKTOP\CARPETAS\FACU\DIGITAL 2\ELEC_DIG_2\TP_DIGITAL2.X\CODIGO.ASM 85 : Register in operand not in bank 0.  Ensure that bank bits are correct.
-Message[302] C:\USERS\NICO\DESKTOP\CARPETAS\FACU\DIGITAL 2\ELEC_DIG_2\TP_DIGITAL2.X\CODIGO.ASM 92 : Register in operand not in bank 0.  Ensure that bank bits are correct.
-Message[302] C:\USERS\NICO\DESKTOP\CARPETAS\FACU\DIGITAL 2\ELEC_DIG_2\TP_DIGITAL2.X\CODIGO.ASM 96 : Register in operand not in bank 0.  Ensure that bank bits are correct.
-Message[302] C:\USERS\NICO\DESKTOP\CARPETAS\FACU\DIGITAL 2\ELEC_DIG_2\TP_DIGITAL2.X\CODIGO.ASM 102 : Register in operand not in bank 0.  Ensure that bank bits are correct.
-Message[302] C:\USERS\NICO\DESKTOP\CARPETAS\FACU\DIGITAL 2\ELEC_DIG_2\TP_DIGITAL2.X\CODIGO.ASM 116 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] C:\USERS\NICO\DESKTOP\CARPETAS\FACU\DIGITAL 2\ELEC_DIG_2\TP_DIGITAL2.X\CODIGO.ASM 75 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] C:\USERS\NICO\DESKTOP\CARPETAS\FACU\DIGITAL 2\ELEC_DIG_2\TP_DIGITAL2.X\CODIGO.ASM 76 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] C:\USERS\NICO\DESKTOP\CARPETAS\FACU\DIGITAL 2\ELEC_DIG_2\TP_DIGITAL2.X\CODIGO.ASM 77 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] C:\USERS\NICO\DESKTOP\CARPETAS\FACU\DIGITAL 2\ELEC_DIG_2\TP_DIGITAL2.X\CODIGO.ASM 84 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] C:\USERS\NICO\DESKTOP\CARPETAS\FACU\DIGITAL 2\ELEC_DIG_2\TP_DIGITAL2.X\CODIGO.ASM 88 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] C:\USERS\NICO\DESKTOP\CARPETAS\FACU\DIGITAL 2\ELEC_DIG_2\TP_DIGITAL2.X\CODIGO.ASM 95 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] C:\USERS\NICO\DESKTOP\CARPETAS\FACU\DIGITAL 2\ELEC_DIG_2\TP_DIGITAL2.X\CODIGO.ASM 99 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] C:\USERS\NICO\DESKTOP\CARPETAS\FACU\DIGITAL 2\ELEC_DIG_2\TP_DIGITAL2.X\CODIGO.ASM 105 : Register in operand not in bank 0.  Ensure that bank bits are correct.
 Message[302] C:\USERS\NICO\DESKTOP\CARPETAS\FACU\DIGITAL 2\ELEC_DIG_2\TP_DIGITAL2.X\CODIGO.ASM 119 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] C:\USERS\NICO\DESKTOP\CARPETAS\FACU\DIGITAL 2\ELEC_DIG_2\TP_DIGITAL2.X\CODIGO.ASM 122 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Warning[202] C:\USERS\NICO\DESKTOP\CARPETAS\FACU\DIGITAL 2\ELEC_DIG_2\TP_DIGITAL2.X\CODIGO.ASM 365 : Argument out of range.  Least significant bits used.
