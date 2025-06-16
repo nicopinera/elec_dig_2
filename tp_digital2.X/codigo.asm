@@ -23,6 +23,8 @@ COLMASK	    EQU 0X24
 
 ; Banderas
 ; B0: Bandera de 1 segundo - Si =1 comienza la conversion en ADC - Si =0 no compienza la conversion - Bandera activada por TMR1 cada 1 segundo
+; B1: Bandera del ADC - Si = 1 el ADC finalizo - Si = 0 el ADC no termino
+; B2: Bandera para Tramistir - Si = 1 Hay que enviar la info por EUSART - Si = 0 no hay que inviar
 ;FLAG	    EQU	0X31
 	    
 	    
@@ -56,17 +58,17 @@ STATUST EQU 0X71
 MAIN:
     CLRF        INGRESAR    ; -- Limpieza de Banderas
     CLRF        TEMPREF
-    CLRF        FLAG_1SEG
-    CLRF        FLAG_ADC_OK
-    CLRF        FLAG_TX
+    CLRF        FLAG_1SEG   ;FLAG,B0
+    CLRF        FLAG_ADC_OK ;FLAG,B1
+    CLRF        FLAG_TX     ;FLAG,B2
     CLRF        DIGITO_0        
     CLRF        DIGITO_1     
-    CLRF        DISPLAY_FLAG
+    CLRF        DISPLAY_FLAG ;FLAG,B3
 
     BANKSEL     TRISD	    ; -- Configuracion de Puertos
     MOVLW       B'11110000' ; RD7-RD4 Entradas (filas), RD3-RD0 Filas (columnas)
     MOVWF       TRISD
-    CLRF        TRISC       ; Display segmentos como salida
+    ;CLRF        TRISC       ; Display segmentos como salida
     MOVLW       B'00000001' ; Configura el puerto B: RBO para el pulsador y RB1 -RB2 los habilitadores del display.
     MOVWF       TRISB
     BSF         TRISE,RE0   ; Configura el puerto E: RE0 como entrada analogica para el sensor y RE1 como salida para el LED.
@@ -112,7 +114,7 @@ MAIN:
     MOVWF       INTCON 
     CLRF	    PIR1		    ; Limpio banderas de ADC - Tx - TRM1iF
     BANKSEL     OPTION_REG
-    MOVLW	    B'10010111'	    ; Flanco de bajada para INT - Frecuencia interna para TMR0 - Prescaler para TMR0 - 1:256
+    MOVLW	    B'10010111'	    ; Flanco de bajada para INT - Frecuencia interna para TMR0 - Prescaler para TMR0 - 1:256 (MODIFICAR EL PRESCALER)
     MOVWF	    OPTION_REG	
     BANKSEL	    PIE1		
     MOVLW       B'01010001'     ; Habilito interrupciones por ADC - TX - TMR1
@@ -127,13 +129,13 @@ MAIN_LOOP:                      ; -- Loop Principal
     CALL        TECLADO		    ; Llama a la rutina de teclado
     BTFSC       INGRESAR,0      ; Si sigue esperando ingreso, no hace nada más
     GOTO        MAIN_LOOP
-
+                ;FLAG,0    
     BTFSC	    FLAG_1SEG, 0    ; Si pasó 1 segundo, inicio conversión ADC
     GOTO        INICIAR_ADC     ; Si no pasó 1 segundo, sigue
-
-    BTFSC       FLAG_ADC_OK, 0	; Si el ADC finalizó, preparar para transmitir
+                ;FLAG,1
+    BTFSC       FLAG_ADC_OK, 0	; Si el ADC finalizó, preparar para transmitir ;FLAG,B1
     GOTO        PREPARAR_TX
-
+                ;FLAG,2
     BTFSC       FLAG_TX, 0      ; Si hay que transmitir, enviar por UART
     GOTO        ENVIAR_UART
 
@@ -148,15 +150,15 @@ MAIN_LOOP:                      ; -- Loop Principal
     GOTO        MAIN_LOOP
 
 INICIAR_ADC:
-    BCF		    FLAG_1SEG, 0	
+    BCF		    FLAG_1SEG, 0    ;FLAG,0
     BANKSEL	    ADCON0
     BSF		    ADCON0, GO     ; Iniciar conversión del ADC
     BSF		    ADCON0, ADON
     GOTO        MAIN_LOOP
 
 PREPARAR_TX:
-    BCF         FLAG_ADC_OK, 0
-    BSF         FLAG_TX, 0     ; Listo para enviar por UART
+    BCF         FLAG_ADC_OK, 0 ;FLAG,B1
+    BSF         FLAG_TX, 0     ; Listo para enviar por UART ;FLAG,B2
     GOTO        MAIN_LOOP
 
 ENVIAR_UART: ; Enviar TEMPACTUAL por UART como ASCII (2 dígitos)
@@ -193,7 +195,7 @@ ESPERO_TX2:
 ESPERO_TX3:
     BTFSS   PIR1,TXIF
     GOTO    ESPERO_TX3
-    BCF     FLAG_TX, 0
+    BCF     FLAG_TX, 0 ;FLAG,B2
     GOTO    MAIN_LOOP
 ; --------------------------------------------
 TECLADO:                    ; Subrutina de Teclado
@@ -419,7 +421,7 @@ ISR_RB0:     ; Atiende la interrupción por el pulsador en RB0 y conmuta la band
 ; --------------------------------------------
 ISR_TMR1:   ; Atiende la interrupción del temporizador 1 y activa la bandera de 1 segundo.
     BCF     PIR1,TMR1IF
-    BSF     FLAG_1SEG,0
+    BSF     FLAG_1SEG,0 ;FLAG,0
     GOTO    SALIR
 ; --------------------------------------------
 ISR_ADC:    ; Atiende la interrupcion del ADC y limpia la bandera correspondiente.
@@ -428,12 +430,12 @@ ISR_ADC:    ; Atiende la interrupcion del ADC y limpia la bandera correspondient
     MOVF    ADRESH, W           ; Leemos solo ADRESH (justificado a la izquierda)
     MOVWF   TEMPACTUAL          ; Guardamos la temperatura
     CALL    ACTUALIZAR_DISPLAY  ; Cada vez que se complete una conversion del ADC se actualizan los displays *(REVISAR POR LAS DUDAS)*
-    BSF     FLAG_ADC_OK, 0
+    BSF     FLAG_ADC_OK, 0      ;FLAG,B1
     GOTO    SALIR
 ; --------------------------------------------
 ISR_TRANSMICION:    ; Interrumpe cuando el buffer esta limpio
     BCF     PIR1,TXIF
-    BCF     FLAG_TX, 0
+    BCF     FLAG_TX, 0 ;FLAG,B2
     GOTO    SALIR
 ; --------------------------------------------
 SALIR:	    ; Restaura el contexto y retorna de la interrupción.
