@@ -22,27 +22,24 @@ COL	    EQU 0X23
 COLMASK	    EQU 0X24    
 
 ; Banderas
-; B0: Bandera de 1 segundo - Si =1 comienza la conversion en ADC - Si =0 no compienza la conversion - Bandera activada por TMR1 cada 1 segundo
-; B1: Bandera del ADC - Si = 1 el ADC finalizo - Si = 0 el ADC no termino
-; B2: Bandera para Tramistir - Si = 1 Hay que enviar la info por EUSART - Si = 0 no hay que inviar
-;FLAG	    EQU	0X31
+; B0: Bandera de 1 segundo - Si =1 comienza la conversion en ADC - Si =0 no compienza la conversion - Bandera activada por TMR1 cada 1 segundo (FLAG_1SEG)
+; B1: Bandera del ADC - Si = 1 el ADC finalizo - Si = 0 el ADC no termino (FLAG_ADC_OK)
+; B2: Bandera para Tramistir - Si = 1 Hay que enviar la info por EUSART - Si = 0 no hay que inviar (FLAG_TX)
+FLAG	    EQU	0X25
 	    
 	    
 ; Displays
-DIGITO_0    EQU 0X25        ; Unidad
-DIGITO_1    EQU 0X26        ; Decena
-DISPLAY_FLAG	EQU	0X27        ; Alterna entre display 0 y 1
+DIGITO_0    EQU 0X26        ; Unidad
+DIGITO_1    EQU 0X27        ; Decena
+DISPLAY_FLAG	EQU	0X28        ; Alterna entre display 0 y 1
 
 ; Contador delay
-CONT0 EQU 0X28       
-CONT1 EQU 0X29 
-DIG1 EQU 0X2A        ; Primer dígito temporal
-WREG_TEMP EQU 0X2B   ; Variable temporal para cálculos
-WREG_TEMP2 EQU 0X2C  ; Variable temporal para cálulos
-FLAG_1SEG EQU 0X2D   ; Bandera activada por TMR1 cada 1 segundo
-FLAG_ADC_OK EQU 0X2E ; Bandera que indica que el ADC terminó
-FLAG_TX EQU 0X2F     ; Bandera para indicar que hay que transmitir
-TEMPACTUAL EQU 0X30  ;Temperatura actual
+CONT0 EQU 0X29       
+CONT1 EQU 0X2A 
+DIG1 EQU 0X2B        ; Primer dígito temporal
+WREG_TEMP EQU 0X2C   ; Variable temporal para cálculos
+WREG_TEMP2 EQU 0X2D  ; Variable temporal para cálulos
+TEMPACTUAL EQU 0X2E  ;Temperatura actual
 
 ; Para guardar contexto
 WTEMP   EQU 0X70
@@ -58,9 +55,10 @@ STATUST EQU 0X71
 MAIN:
     CLRF        INGRESAR    ; -- Limpieza de Banderas
     CLRF        TEMPREF
-    CLRF        FLAG_1SEG   ;FLAG,B0
-    CLRF        FLAG_ADC_OK ;FLAG,B1
-    CLRF        FLAG_TX     ;FLAG,B2
+    CLRF        FLAG
+;    CLRF        FLAG_1SEG   ;FLAG,B0
+;    CLRF        FLAG_ADC_OK ;FLAG,B1
+;    CLRF        FLAG_TX     ;FLAG,B2
     CLRF        DIGITO_0        
     CLRF        DIGITO_1     
     CLRF        DISPLAY_FLAG ;FLAG,B3
@@ -130,13 +128,13 @@ MAIN_LOOP:                      ; -- Loop Principal
     BTFSC       INGRESAR,0      ; Si sigue esperando ingreso, no hace nada más
     GOTO        MAIN_LOOP
                 ;FLAG,0    
-    BTFSC	    FLAG_1SEG, 0    ; Si pasó 1 segundo, inicio conversión ADC
+    BTFSC	    FLAG,0   ; Si pasó 1 segundo, inicio conversión ADC
     GOTO        INICIAR_ADC     ; Si no pasó 1 segundo, sigue
                 ;FLAG,1
-    BTFSC       FLAG_ADC_OK, 0	; Si el ADC finalizó, preparar para transmitir ;FLAG,B1
+    BTFSC       FLAG,1	; Si el ADC finalizó, preparar para transmitir ;FLAG,B1
     GOTO        PREPARAR_TX
                 ;FLAG,2
-    BTFSC       FLAG_TX, 0      ; Si hay que transmitir, enviar por UART
+    BTFSC       FLAG,2      ; Si hay que transmitir, enviar por UART
     GOTO        ENVIAR_UART
 
     ; Comparación de temperatura actual con la temperatura de referencia para prender el led
@@ -150,15 +148,15 @@ MAIN_LOOP:                      ; -- Loop Principal
     GOTO        MAIN_LOOP
 
 INICIAR_ADC:
-    BCF		    FLAG_1SEG, 0    ;FLAG,0
+    BCF		    FLAG,0
     BANKSEL	    ADCON0
     BSF		    ADCON0, GO     ; Iniciar conversión del ADC
     BSF		    ADCON0, ADON
     GOTO        MAIN_LOOP
 
 PREPARAR_TX:
-    BCF         FLAG_ADC_OK, 0 ;FLAG,B1
-    BSF         FLAG_TX, 0     ; Listo para enviar por UART ;FLAG,B2
+    BCF         FLAG,1
+    BSF         FLAG,2     ; Listo para enviar por UART ;FLAG,2
     GOTO        MAIN_LOOP
 
 ENVIAR_UART: ; Enviar TEMPACTUAL por UART como ASCII (2 dígitos)
@@ -195,7 +193,7 @@ ESPERO_TX2:
 ESPERO_TX3:
     BTFSS   PIR1,TXIF
     GOTO    ESPERO_TX3
-    BCF     FLAG_TX, 0 ;FLAG,B2
+    BCF     FLAG,2
     GOTO    MAIN_LOOP
 ; --------------------------------------------
 TECLADO:                    ; Subrutina de Teclado
@@ -421,7 +419,7 @@ ISR_RB0:     ; Atiende la interrupción por el pulsador en RB0 y conmuta la band
 ; --------------------------------------------
 ISR_TMR1:   ; Atiende la interrupción del temporizador 1 y activa la bandera de 1 segundo.
     BCF     PIR1,TMR1IF
-    BSF     FLAG_1SEG,0 ;FLAG,0
+    BSF     FLAG,0
     GOTO    SALIR
 ; --------------------------------------------
 ISR_ADC:    ; Atiende la interrupcion del ADC y limpia la bandera correspondiente.
@@ -430,12 +428,12 @@ ISR_ADC:    ; Atiende la interrupcion del ADC y limpia la bandera correspondient
     MOVF    ADRESH, W           ; Leemos solo ADRESH (justificado a la izquierda)
     MOVWF   TEMPACTUAL          ; Guardamos la temperatura
     CALL    ACTUALIZAR_DISPLAY  ; Cada vez que se complete una conversion del ADC se actualizan los displays *(REVISAR POR LAS DUDAS)*
-    BSF     FLAG_ADC_OK, 0      ;FLAG,B1
+    BSF     FLAG,1
     GOTO    SALIR
 ; --------------------------------------------
 ISR_TRANSMICION:    ; Interrumpe cuando el buffer esta limpio
     BCF     PIR1,TXIF
-    BCF     FLAG_TX, 0 ;FLAG,B2
+    BCF     FLAG,2
     GOTO    SALIR
 ; --------------------------------------------
 SALIR:	    ; Restaura el contexto y retorna de la interrupción.
