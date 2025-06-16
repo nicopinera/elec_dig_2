@@ -91,6 +91,24 @@ A continuación se detallan los comandos más comunes para utilizar git:
   `git push origin master`
 - Para descargar o bajar los cambios del repositorio en github:  
   `git pull origin master`
+- Para crear y moverse a una rama:
+  `git checkout -b "nombre-rama"`
+- Cambiar de rama:
+  `git checkout "rama"`
+- Subir la rama al repositorio remoto (GitHub):
+  `git push origin "nombre-rama"`
+- Si la rama es nueva, luego de hacer push, GitHub mostrará la opción de crear un **Pull Request** para fusionar los cambios a la rama principal.
+- Realizar el Merge de una rama a la actual
+  `git merge "nombre-rama"`
+- Eliminar una rama:
+  `git branch -d "nombre-rama"`
+- Si eliminaste la rama desde GitHub (por ejemplo, después de hacer el merge del Pull Request), puedes eliminar la rama local con:
+  `git branch -d "nombre-rama"`
+- Si la rama ya no existe en remoto y quieres eliminar la referencia remota:
+  `git fetch -p`
+
+> **Nota:** Si borrás la rama desde GitHub, la rama local no se elimina automáticamente. Debés borrarla manualmente con el comando anterior.
+
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/nicopinera/elec_dig_2)
 
