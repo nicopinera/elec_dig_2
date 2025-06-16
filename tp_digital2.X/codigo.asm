@@ -384,19 +384,19 @@ ISR_ADC:    ; Atiende la interrupcion del ADC y limpia la bandera correspondient
     GOTO    SALIR
 ; --------------------------------------------
 ISR_TRANSMICION:    ; Interrumpe cuando el buffer esta limpio
-        BANKSEL PIR1
-        BCF     PIR1,TXIF   ;Limpio la bandera
-        BANKSEL PIE1
-        BCF     PIE1,TXIE   ; Deshabilito la interrupcion de transmicion
+    BANKSEL PIR1
+    BCF     PIR1,TXIF   ;Limpio la bandera
+    BANKSEL PIE1
+    BCF     PIE1,TXIE   ; Deshabilito la interrupcion de transmicion
 
-        BANKSEL FLAG        ; (REVISAR)
-        BCF     FLAG,2
+    BANKSEL FLAG        ; (REVISAR)
+    BCF     FLAG,2
 
-        BANKSEL TEMPACTUAL      ; -- Proceso de Tx
-        MOVF    TEMPACTUAL,W    
-        BTFSS   STATUS,Z        ; SI ESTA VACIO NO ENVIO NADA
-        MOVWF   TXREG
-        GOTO    SALIR
+    BANKSEL TEMPACTUAL      ; -- Proceso de Tx
+    MOVF    TEMPACTUAL,W    
+    BTFSS   STATUS,Z        ; SI ESTA VACIO NO ENVIO NADA
+    MOVWF   TXREG
+    GOTO    SALIR
 ; --------------------------------------------
 SALIR:	    ; Restaura el contexto y retorna de la interrupción.
     SWAPF   STATUST,W
