@@ -1,5 +1,5 @@
 MPLINK 5.09, LINKER
-Linker Map File - Created Sun Jun 15 17:16:12 2025
+Linker Map File - Created Sun Jun 15 20:57:52 2025
 
                                  Section Info
                   Section       Type    Address   Location Size(Bytes)
@@ -7,7 +7,7 @@ Linker Map File - Created Sun Jun 15 17:16:12 2025
                    .org_0       code   0x000000    program   0x000002
                    .cinit    romdata   0x000001    program   0x000004
                    .org_1       code   0x000004    program   0x000002
-                   .org_2       code   0x000005    program   0x00029a
+                   .org_2       code   0x000005    program   0x00029e
 
 
 
@@ -15,46 +15,48 @@ Linker Map File - Created Sun Jun 15 17:16:12 2025
                                Start         End      
                            ---------   ---------      
                             0x000000    0x000002      
-                            0x000004    0x000151      
-            337 out of 8455 program addresses used, program memory utilization is 3%
+                            0x000004    0x000153      
+            339 out of 8455 program addresses used, program memory utilization is 4%
 
 
 
                               Symbols - Sorted by Name
                      Name    Address   Location    Storage File                     
                 ---------  ---------  ---------  --------- ---------                
-       ACTUALIZAR_DISPLAY   0x0000f2    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-              BUCLE_RESTA   0x0000f7    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-             CHECK_ADC_OK   0x000060    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                 CHECK_TX   0x000064    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                 DIV_LOOP   0x00006b    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-           ENVIAR_DIGITOS   0x000072    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-          ESCANEAR_TECLAS   0x0000ae    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-               ESPERO_TX1   0x000075    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-               ESPERO_TX2   0x00007a    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                FOUND_ROW   0x0000d0    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-           GUARDAR_UNIDAD   0x0000ff    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                      ISR   0x000116    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                  ISR_ADC   0x000142    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                  ISR_RB0   0x000139    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                 ISR_TMR0   0x000126    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                 ISR_TMR1   0x00013f    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-          ISR_TRANSMICION   0x00014a    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                       L1   0x000106    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                       L2   0x000104    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+       ACTUALIZAR_DISPLAY   0x0000f4    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+              BUCLE_RESTA   0x0000f9    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+                 DIV_LOOP   0x00006d    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+           ENVIAR_DIGITOS   0x000074    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+              ENVIAR_UART   0x000068    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+          ESCANEAR_TECLAS   0x0000b5    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+               ESPERO_TX1   0x000077    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+               ESPERO_TX2   0x00007c    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+               ESPERO_TX3   0x000080    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+                FOUND_ROW   0x0000d6    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+           GUARDAR_UNIDAD   0x000101    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+              INICIAR_ADC   0x00005f    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+                      ISR   0x000118    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+                  ISR_ADC   0x000144    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+                  ISR_RB0   0x00013b    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+                 ISR_TMR0   0x000128    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+                 ISR_TMR1   0x000141    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+          ISR_TRANSMICION   0x00014c    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+                       L1   0x000108    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+                       L2   0x000106    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
                      MAIN   0x000005    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                MAIN_LOOP   0x000052    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-            MUX_DISPLAY_1   0x000132    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                 NEXT_COL   0x0000d8    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-             RETARDO_20ms   0x000102    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                    SALIR   0x00014d    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-            SCAN_COL_LOOP   0x0000b1    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-            SCAN_ROW_LOOP   0x0000c5    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-               TABLA_7SEG   0x00010c    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                  TECLADO   0x00007e    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-    TECLADO_PRIMER_DIGITO   0x0000aa    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-   TECLADO_SEGUNDO_DIGITO   0x000095    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                   TECLAS   0x0000e1    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+                MAIN_LOOP   0x00004e    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+            MUX_DISPLAY_1   0x000134    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+                 NEXT_COL   0x0000de    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+              PREPARAR_TX   0x000065    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+             RETARDO_20ms   0x000104    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+                    SALIR   0x00014f    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+            SCAN_COL_LOOP   0x0000b8    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+            SCAN_ROW_LOOP   0x0000cc    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+               TABLA_7SEG   0x00010e    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+                  TECLADO   0x000084    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+    TECLADO_PRIMER_DIGITO   0x0000b1    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+   TECLADO_SEGUNDO_DIGITO   0x0000a1    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+                   TECLAS   0x0000e7    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
 
 
 
@@ -62,36 +64,38 @@ Linker Map File - Created Sun Jun 15 17:16:12 2025
                      Name    Address   Location    Storage File                     
                 ---------  ---------  ---------  --------- ---------                
                      MAIN   0x000005    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                MAIN_LOOP   0x000052    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-             CHECK_ADC_OK   0x000060    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                 CHECK_TX   0x000064    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                 DIV_LOOP   0x00006b    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-           ENVIAR_DIGITOS   0x000072    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-               ESPERO_TX1   0x000075    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-               ESPERO_TX2   0x00007a    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                  TECLADO   0x00007e    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-   TECLADO_SEGUNDO_DIGITO   0x000095    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-    TECLADO_PRIMER_DIGITO   0x0000aa    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-          ESCANEAR_TECLAS   0x0000ae    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-            SCAN_COL_LOOP   0x0000b1    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-            SCAN_ROW_LOOP   0x0000c5    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                FOUND_ROW   0x0000d0    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                 NEXT_COL   0x0000d8    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                   TECLAS   0x0000e1    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-       ACTUALIZAR_DISPLAY   0x0000f2    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-              BUCLE_RESTA   0x0000f7    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-           GUARDAR_UNIDAD   0x0000ff    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-             RETARDO_20ms   0x000102    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                       L2   0x000104    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                       L1   0x000106    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-               TABLA_7SEG   0x00010c    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                      ISR   0x000116    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                 ISR_TMR0   0x000126    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-            MUX_DISPLAY_1   0x000132    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                  ISR_RB0   0x000139    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                 ISR_TMR1   0x00013f    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                  ISR_ADC   0x000142    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-          ISR_TRANSMICION   0x00014a    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
-                    SALIR   0x00014d    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+                MAIN_LOOP   0x00004e    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+              INICIAR_ADC   0x00005f    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+              PREPARAR_TX   0x000065    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+              ENVIAR_UART   0x000068    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+                 DIV_LOOP   0x00006d    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+           ENVIAR_DIGITOS   0x000074    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+               ESPERO_TX1   0x000077    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+               ESPERO_TX2   0x00007c    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+               ESPERO_TX3   0x000080    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+                  TECLADO   0x000084    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+   TECLADO_SEGUNDO_DIGITO   0x0000a1    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+    TECLADO_PRIMER_DIGITO   0x0000b1    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+          ESCANEAR_TECLAS   0x0000b5    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+            SCAN_COL_LOOP   0x0000b8    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+            SCAN_ROW_LOOP   0x0000cc    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+                FOUND_ROW   0x0000d6    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+                 NEXT_COL   0x0000de    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+                   TECLAS   0x0000e7    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+       ACTUALIZAR_DISPLAY   0x0000f4    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+              BUCLE_RESTA   0x0000f9    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+           GUARDAR_UNIDAD   0x000101    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+             RETARDO_20ms   0x000104    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+                       L2   0x000106    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+                       L1   0x000108    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+               TABLA_7SEG   0x00010e    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+                      ISR   0x000118    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+                 ISR_TMR0   0x000128    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+            MUX_DISPLAY_1   0x000134    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+                  ISR_RB0   0x00013b    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+                 ISR_TMR1   0x000141    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+                  ISR_ADC   0x000144    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+          ISR_TRANSMICION   0x00014c    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
+                    SALIR   0x00014f    program     static C:\Users\Nico\Desktop\Carpetas\Facu\Digital 2\elec_dig_2\tp_digital2.X\codigo.asm
 
 

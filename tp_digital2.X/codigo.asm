@@ -1,4 +1,4 @@
-LIST	p=16f887
+    LIST	p=16f887
     #INCLUDE	<p16f887.inc>
     
 ;-------------------------------
@@ -410,7 +410,7 @@ MUX_DISPLAY_1:
     MOVWF   DISPLAY_FLAG
     GOTO    SALIR
 ;----------------------------------------------
-ISR_RB0     ; Atiende la interrupción por el pulsador en RB0 y conmuta la bandera de ingreso.
+ISR_RB0:     ; Atiende la interrupción por el pulsador en RB0 y conmuta la bandera de ingreso.
     BCF     INTCON,INTF
     BANKSEL INGRESAR
     MOVLW   .1
@@ -422,7 +422,7 @@ ISR_TMR1:   ; Atiende la interrupción del temporizador 1 y activa la bandera de
     BSF     FLAG_1SEG,0
     GOTO    SALIR
 ; --------------------------------------------
-ISR_ADC:    ; Atiende la interrupción del ADC y limpia la bandera correspondiente.
+ISR_ADC:    ; Atiende la interrupcion del ADC y limpia la bandera correspondiente.
     BCF     PIR1,ADIF
     BANKSEL ADRESH
     MOVF    ADRESH, W           ; Leemos solo ADRESH (justificado a la izquierda)
@@ -431,12 +431,12 @@ ISR_ADC:    ; Atiende la interrupción del ADC y limpia la bandera correspondien
     BSF     FLAG_ADC_OK, 0
     GOTO    SALIR
 ; --------------------------------------------
-ISR_TRANSMICION:    ; Atiende la interrupción de transmisión y limpia la bandera correspondiente.
+ISR_TRANSMICION:    ; Interrumpe cuando el buffer esta limpio
     BCF     PIR1,TXIF
     BCF     FLAG_TX, 0
     GOTO    SALIR
 ; --------------------------------------------
-SALIR:    ; Restaura el contexto y retorna de la interrupción.
+SALIR:	    ; Restaura el contexto y retorna de la interrupción.
     SWAPF   STATUST,W
     MOVWF   STATUST
     SWAPF   WTEMP,F
