@@ -113,7 +113,7 @@ MAIN:
     MOVLW	B'10010100'	    ; Flanco de bajada para INT - Frecuencia interna para TMR0 - Prescaler para TMR0 - 1:32
     MOVWF	OPTION_REG	
     BANKSEL	PIE1		
-    MOVLW       B'01010001'     ; Habilito interrupciones por ADC - TX - TMR1
+    MOVLW       B'01000001'     ; Habilito interrupciones por ADC - TMR1
     MOVWF       PIE1            
 
     ;Activo TMR1
@@ -123,17 +123,11 @@ MAIN:
 MAIN_LOOP:                      ; -- Loop Principal
     BTFSC       INGRESAR,0	    ; Si está esperando ingreso de número
     CALL        TECLADO		    ; Llama a la rutina de teclado
-    BTFSC       INGRESAR,0          ; Si sigue esperando ingreso, no hace nada más
+    BTFSC       INGRESAR,0      ; Si sigue esperando ingreso, no hace nada más
     GOTO        MAIN_LOOP
                 ;FLAG,0    
-    BTFSC	FLAG,0              ; Si pasó 1 segundo, inicio conversión ADC
+    BTFSC	    FLAG,0              ; Si pasó 1 segundo, inicio conversión ADC
     GOTO        INICIAR_ADC         ; Si no pasó 1 segundo, sigue
-                ;FLAG,1
-    BTFSC       FLAG,1	            ; Si el ADC finalizó, preparar para transmitir ;FLAG,B1
-    GOTO        PREPARAR_TX
-                ;FLAG,2
-    BTFSC       FLAG,2              ; Si hay que transmitir, enviar por UART
-    GOTO        ENVIAR_UART
 
     ; Comparación de temperatura actual con la temperatura de referencia para prender el led
     MOVF        TEMPREF,W
@@ -149,49 +143,7 @@ INICIAR_ADC:
     BANKSEL	    ADCON0
     BSF		    ADCON0, GO     ; Iniciar conversión del ADC
     BSF		    ADCON0, ADON
-    GOTO            MAIN_LOOP
-
-PREPARAR_TX:
-    BCF         FLAG,1
-    BSF         FLAG,2             ; Listo para enviar por UART ;FLAG,2
     GOTO        MAIN_LOOP
-
-ENVIAR_UART: ; Enviar TEMPACTUAL por UART como ASCII (2 dígitos)
-    MOVF    TEMPACTUAL, W
-    MOVWF   WREG_TEMP
-    MOVLW   .10
-    MOVWF   WREG_TEMP2
-    CLRF    DIG1
-    
-DIV_LOOP:   ; Dividir por 10 para obtener decena
-    MOVF    WREG_TEMP, W
-    SUBWF   WREG_TEMP2, W
-    BTFSS   STATUS, C
-    GOTO    ENVIAR_DIGITOS
-    INCFSZ  DIG1, F
-    SUBWF   WREG_TEMP, F
-    GOTO    DIV_LOOP
-
-ENVIAR_DIGITOS: ; Enviar decena
-    MOVF    DIG1, W
-    ADDLW   '0'
-    MOVWF   TXREG
-ESPERO_TX1:
-    BTFSS   PIR1,TXIF
-    GOTO    ESPERO_TX1
-    MOVF    WREG_TEMP, W    ; Enviar unidad
-    ADDLW   '0'
-    MOVWF   TXREG
-ESPERO_TX2:
-    BTFSS   PIR1,TXIF
-    GOTO    ESPERO_TX2
-    MOVLW   0x0A    ; Agregar salto de línea (LF, 0x0A)
-    MOVWF   TXREG
-ESPERO_TX3:
-    BTFSS   PIR1,TXIF
-    GOTO    ESPERO_TX3
-    BCF     FLAG,2
-    GOTO    MAIN_LOOP
 ; --------------------------------------------
 TECLADO:                    ; Subrutina de Teclado
     BANKSEL     PORTD
@@ -415,7 +367,11 @@ ISR_RB0:     ; Atiende la interrupción por el pulsador en RB0 y conmuta la band
 ; --------------------------------------------
 ISR_TMR1:   ; Atiende la interrupción del temporizador 1 y activa la bandera de 1 segundo.
     BCF     PIR1,TMR1IF
-    BSF     FLAG,0
+    BANKSEL PIE1
+    BSF     PIE1,TXIE   ; Habilito la transmicion luego de 1 segundo
+    BANKSEL FLAG
+    MOVLW   B'00000001'
+    XORWF   FLAG,F      ;SE COMPLEMENTA LA BANDERA DE 1 SEGUNDO PARA PRENDER EL ADC
     GOTO    SALIR
 ; --------------------------------------------
 ISR_ADC:    ; Atiende la interrupcion del ADC y limpia la bandera correspondiente.
@@ -428,9 +384,19 @@ ISR_ADC:    ; Atiende la interrupcion del ADC y limpia la bandera correspondient
     GOTO    SALIR
 ; --------------------------------------------
 ISR_TRANSMICION:    ; Interrumpe cuando el buffer esta limpio
-    BCF     PIR1,TXIF
-    BCF     FLAG,2
-    GOTO    SALIR
+        BANKSEL PIR1
+        BCF     PIR1,TXIF   ;Limpio la bandera
+        BANKSEL PIE1
+        BCF     PIE1,TXIE   ; Deshabilito la interrupcion de transmicion
+
+        BANKSEL FLAG        ; (REVISAR)
+        BCF     FLAG,2
+
+        BANKSEL TEMPACTUAL      ; -- Proceso de Tx
+        MOVF    TEMPACTUAL,W    
+        BTFSS   STATUS,Z        ; SI ESTA VACIO NO ENVIO NADA
+        MOVWF   TXREG
+        GOTO    SALIR
 ; --------------------------------------------
 SALIR:	    ; Restaura el contexto y retorna de la interrupción.
     SWAPF   STATUST,W
