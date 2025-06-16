@@ -149,7 +149,7 @@ INICIAR_ADC:
     BANKSEL	    ADCON0
     BSF		    ADCON0, GO     ; Iniciar conversión del ADC
     BSF		    ADCON0, ADON
-    GOTO        MAIN_LOOP
+    GOTO            MAIN_LOOP
 
 PREPARAR_TX:
     BCF         FLAG,1
