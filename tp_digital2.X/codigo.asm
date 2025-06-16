@@ -113,11 +113,11 @@ MAIN:
     BANKSEL     INTCON		    ; -- Configuracion de Interrupciones y TMR0
     MOVLW       B'11110000'     ; Habilito GIE - PEIE - T0IE- INTE y limpio bandera INTF
     MOVWF       INTCON 
-    CLRF	    PIR1		    ; Limpio banderas de ADC - Tx - TRM1iF
+    CLRF	PIR1		    ; Limpio banderas de ADC - Tx - TRM1iF
     BANKSEL     OPTION_REG
-    MOVLW	    B'10010111'	    ; Flanco de bajada para INT - Frecuencia interna para TMR0 - Prescaler para TMR0 - 1:256 (MODIFICAR EL PRESCALER)
-    MOVWF	    OPTION_REG	
-    BANKSEL	    PIE1		
+    MOVLW	B'10010100'	    ; Flanco de bajada para INT - Frecuencia interna para TMR0 - Prescaler para TMR0 - 1:32
+    MOVWF	OPTION_REG	
+    BANKSEL	PIE1		
     MOVLW       B'01010001'     ; Habilito interrupciones por ADC - TX - TMR1
     MOVWF       PIE1            
 
