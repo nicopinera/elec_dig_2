@@ -25,13 +25,17 @@ COLMASK	    EQU 0X24
 ; B0: Bandera de 1 segundo - Si =1 comienza la conversion en ADC - Si =0 no compienza la conversion - Bandera activada por TMR1 cada 1 segundo (FLAG_1SEG)
 ; B1: Bandera del ADC - Si = 1 el ADC finalizo - Si = 0 el ADC no termino (FLAG_ADC_OK)
 ; B2: Bandera para Tramistir - Si = 1 Hay que enviar la info por EUSART - Si = 0 no hay que inviar (FLAG_TX)
+; B3: Display que se prende - 0 = Display 2 (UNIDAD - RB2) - 1 = Display 1 (DECENA - RB1)
 FLAG	    EQU	0X25
 	    
 	    
 ; Displays
-DIGITO_0    EQU 0X26        ; Unidad
-DIGITO_1    EQU 0X27        ; Decena
-DISPLAY_FLAG	EQU	0X28        ; Alterna entre display 0 y 1
+
+; Unidad
+DIGITO_0    EQU 0X26     
+
+; Decena
+DIGITO_1    EQU 0X27        
 
 ; Contador delay
 CONT0 EQU 0X29       
@@ -61,7 +65,7 @@ MAIN:
 ;    CLRF        FLAG_TX     ;FLAG,B2
     CLRF        DIGITO_0        
     CLRF        DIGITO_1     
-    CLRF        DISPLAY_FLAG ;FLAG,B3
+;    CLRF        DISPLAY_FLAG ;FLAG,B3
 
     BANKSEL     TRISD	    ; -- Configuracion de Puertos
     MOVLW       B'11110000' ; RD7-RD4 Entradas (filas), RD3-RD0 Filas (columnas)
@@ -359,6 +363,7 @@ L1  NOP
     RETURN
 ;-----------------------------------------------------------------------------
 TABLA_7SEG:
+    ADWF    PCL,PCL
     RETLW   B'11000000' ; 0
     RETLW   B'11111001' ; 1
     RETLW   B'10100100' ; 2
@@ -389,25 +394,28 @@ ISR:                    ; Rutina principal de atención a interrupciones: verifi
 ; --------------------------------------------
 ISR_TMR0:
     BCF     INTCON, T0IF
-    BCF     PORTA, 0
-    BCF     PORTA, 1
-    MOVF    DISPLAY_FLAG, W
-    BTFSC   STATUS, Z
+    BCF     PORTB, RB1
+    BCF     PORTB, RB2
+    BTFSC   FLAG,3
+;    MOVF    DISPLAY_FLAG, W
+;    BTFSC   STATUS, Z
     GOTO    MUX_DISPLAY_1
     ; Mostrar unidad
     MOVF    DIGITO_0, W
     CALL    TABLA_7SEG
-    MOVWF   PORTC
-    BSF     PORTA, 1
-    CLRF    DISPLAY_FLAG
+    MOVWF   PORTA
+    BSF     PORTB, RB2
+    BSF     FLAG,3
+;    CLRF    DISPLAY_FLAG
     GOTO    SALIR
 MUX_DISPLAY_1:
     MOVF    DIGITO_1, W
     CALL    TABLA_7SEG
-    MOVWF   PORTC
-    BSF     PORTA, 0
-    MOVLW   0x01
-    MOVWF   DISPLAY_FLAG
+    MOVWF   PORTA
+    BSF     PORTB, RB1
+    BCF     FLAG,3
+;    MOVLW   0x01
+;    MOVWF   DISPLAY_FLAG
     GOTO    SALIR
 ;----------------------------------------------
 ISR_RB0:     ; Atiende la interrupción por el pulsador en RB0 y conmuta la bandera de ingreso.
