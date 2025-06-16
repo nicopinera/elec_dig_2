@@ -140,7 +140,6 @@ MAIN_LOOP:                      ; -- Loop Principal
     SUBWF       TEMPACTUAL,W
     BTFSC       STATUS,C	    ; Si TEMPACTUAL >= TEMPREF
     BSF         PORTE,RE1	    ; Enciende LED
-    ; FALTA: Apagar el LED si TEMPACTUAL < TEMPREF
     BTFSS       STATUS,C
     BCF         PORTE,RE1
     GOTO        MAIN_LOOP
