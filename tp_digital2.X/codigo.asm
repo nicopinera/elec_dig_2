@@ -1,6 +1,13 @@
     LIST	p=16f887
     #INCLUDE	<p16f887.inc>
-    
+
+    ; Palabras de configuracion 
+    ; CONFIG1
+    ; __config 0x3FF5
+ __CONFIG _CONFIG1, _FOSC_INTRC_NOCLKOUT & _WDTE_OFF & _PWRTE_OFF & _MCLRE_ON & _CP_OFF & _CPD_OFF & _BOREN_ON & _IESO_OFF & _FCMEN_OFF & _LVP_OFF
+    ; CONFIG2
+    ; __config 0x3FFF
+ __CONFIG _CONFIG2, _BOR4V_BOR40V & _WRT_OFF
 ;-------------------------------
 ; Variables externas
 ;-------------------------------
@@ -308,7 +315,7 @@ L1  NOP
     RETURN
 ;-----------------------------------------------------------------------------
 TABLA_7SEG: ;Catodo Comun (hgfedcba) h=dp
-    ADDWF       PCL,PCL
+    ADDWF       PCL,F
     RETLW       B'00111111' ; 0 
     RETLW       B'00000110' ; 1 
     RETLW       B'01011011' ; 2 01011011
