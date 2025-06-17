@@ -4,10 +4,10 @@
     ; Palabras de configuracion 
     ; CONFIG1
     ; __config 0x3FF5
- __CONFIG _CONFIG1, _FOSC_INTRC_NOCLKOUT & _WDTE_OFF & _PWRTE_OFF & _MCLRE_ON & _CP_OFF & _CPD_OFF & _BOREN_ON & _IESO_OFF & _FCMEN_OFF & _LVP_OFF
+    __CONFIG _CONFIG1, _FOSC_INTRC_NOCLKOUT & _WDTE_OFF & _PWRTE_OFF & _MCLRE_ON & _CP_OFF & _CPD_OFF & _BOREN_ON & _IESO_OFF & _FCMEN_OFF & _LVP_OFF
     ; CONFIG2
     ; __config 0x3FFF
- __CONFIG _CONFIG2, _BOR4V_BOR40V & _WRT_OFF
+    __CONFIG _CONFIG2, _BOR4V_BOR40V & _WRT_OFF
 ;-------------------------------
 ; Variables externas
 ;-------------------------------
@@ -48,13 +48,13 @@ CONT0 EQU 0X29
 
 CONT1 EQU 0X2A
 
-; Primer dígito temporal
+; Primer digito temporal
 DIG1 EQU 0X2B
 
-; Variable temporal para cálculos
+; Variable temporal para calculos
 WREG_TEMP EQU 0X2C
 
-; Variable temporal para cálulos
+; Variable temporal para calculos
 WREG_TEMP2 EQU 0X2D
 
 ;Temperatura actual
@@ -99,51 +99,50 @@ MAIN:
     MOVLW       B'01011000'
     MOVWF       OSCCON	    
     
-    BANKSEL	    ADCON0	    ; -- Configuracion del ADC
-    MOVLW	    B'00010101' ; Canal AN5 (RE0), ADC habilitado pero no convirtiendo 
-    MOVWF	    ADCON0	    ; Frecuencia = Fosc/2 = 1[MHz]
-    CLRF	    ADRESH	    ; Limpio registro donde se guarda la conversion
-    BANKSEL	    ADCON1
-    CLRF	    ADCON1	    ; Justificado a la izquierda, Vref = VDD-VSS
+    BANKSEl	ADCON0	    ; -- Configuracion del ADC
+    MOVLW	B'00010101' ; Canal AN5 (RE0), ADC habilitado pero no convirtiendo 
+    MOVWF	ADCON0	    ; Frecuencia = Fosc/2 = 1[MHz]
+    CLRF	ADRESH	    ; Limpio registro donde se guarda la conversion
+    BANKSEL	ADCON1
+    CLRF	ADCON1	    ; Justificado a la izquierda, Vref = VDD-VSS
     
-    BANKSEL	    TXSTA	    ; -- Configuracion de la Tx
-    MOVLW	    B'00100100' ; TXEN=1, BRGH=1 (alta velocidad)
-    MOVWF	    TXSTA
-    BANKSEL	    RCSTA
-    MOVLW	    B'10000000' ; SPEN=1 habilita transmisor
-    MOVWF	    RCSTA
-    BANKSEL	    SPBRG
-    MOVLW	    .12         ; Baud Rate 9600 con Fosc = 2MHz (BRGH=1): SPBRG=12
-    MOVWF	    SPBRG
+    BANKSEL	TXSTA	    ; -- Configuracion de la Tx
+    MOVLW	B'00100100' ; TXEN=1, BRGH=1 (alta velocidad)
+    MOVWF	TXSTA
+    BANKSEL	RCSTA
+    MOVLW	B'10000000' ; SPEN=1 habilita transmisor
+    MOVWF	RCSTA
+    BANKSEL	SPBRG
+    MOVLW	.12         ; Baud Rate 9600 con Fosc = 2MHz (BRGH=1): SPBRG=12
+    MOVWF	SPBRG
     
-    BANKSEL     T1CON   ; -- Timer 1
+    BANKSEL     T1CON	    ; -- Timer 1
     CLRF        TMR1L
     CLRF        TMR1H
     MOVLW       B'00110000'
-    MOVWF       T1CON   ; Inicializa el temporizador TMR1 y lo configura.
+    MOVWF       T1CON	    ; Inicializa el temporizador TMR1 y lo configura.
     
-    BANKSEL     INTCON		    ; -- Configuracion de Interrupciones y TMR0
-    MOVLW       B'11110000'     ; Habilito GIE - PEIE - T0IE- INTE y limpio bandera INTF
+    BANKSEL     INTCON	    ; -- Configuracion de Interrupciones y TMR0
+    MOVLW       B'11110000' ; Habilito GIE - PEIE - T0IE- INTE y limpio bandera INTF
     MOVWF       INTCON 
-    CLRF	    PIR1		    ; Limpio banderas de ADC - Tx - TRM1iF
+    CLRF	PIR1	    ; Limpio banderas de ADC - Tx - TRM1iF
     BANKSEL     OPTION_REG
-    MOVLW	    B'10010100'	    ; Flanco de bajada para INT - Frecuencia interna para TMR0 - Prescaler para TMR0 - 1:32
-    MOVWF	    OPTION_REG	
-    BANKSEL	    PIE1		
-    MOVLW       B'01000001'     ; Habilito interrupciones por ADC - TMR1
+    MOVLW	B'10010100' ; Flanco de bajada para INT - Frecuencia interna para TMR0 - Prescaler para TMR0 - 1:32
+    MOVWF	OPTION_REG	
+    BANKSEL	PIE1		
+    MOVLW       B'01000001' ; Habilito interrupciones por ADC - TMR1
     MOVWF       PIE1            
 
     BANKSEL     T1CON       ; -- Activo TMR1
     BSF         T1CON,0             
 ; --------------------------------------------
-MAIN_LOOP:                      ; -- Loop Principal
-    BTFSC       INGRESAR,0	    ; Si está esperando ingreso de número
+MAIN_LOOP:                  ; -- Loop Principal
+    BTFSC       INGRESAR,0  ; Si está esperando ingreso de número
     CALL        TECLADO		    ; Llama a la rutina de teclado
     BTFSC       INGRESAR,0      ; Si sigue esperando ingreso, no hace nada más
     GOTO        MAIN_LOOP   
-    BTFSC	    FLAG,0          ; Si pasó 1 segundo, inicio conversión ADC
+    BTFSC	FLAG,0          ; Si pasó 1 segundo, inicio conversión ADC
     GOTO        INICIAR_ADC     ; Si no pasó 1 segundo, sigue
-
     MOVF        TEMPREF,W       ; Comparación de temperatura actual con la temperatura de referencia para prender el led
     SUBWF       TEMPACTUAL,W
     BTFSC       STATUS,C	    ; Si TEMPACTUAL >= TEMPREF
@@ -153,10 +152,10 @@ MAIN_LOOP:                      ; -- Loop Principal
     GOTO        MAIN_LOOP
 
 INICIAR_ADC:    ; Iniciar conversión del ADC
-    BCF		    FLAG,0
-    BANKSEL	    ADCON0
-    BSF		    ADCON0, GO     
-    BSF		    ADCON0, ADON
+    BCF		FLAG,0
+    BANKSEL	ADCON0
+    BSF		ADCON0, GO     
+    BSF		ADCON0, ADON
     GOTO        MAIN_LOOP
 ; --------------------------------------------
 TECLADO:                    ; Subrutina de Teclado
