@@ -60,9 +60,6 @@ WREG_TEMP2 EQU 0X2D
 ;Temperatura actual
 TEMPACTUAL EQU 0X2E  
 
-; Variable para el valor a mostrar en el display
-VALOR_DISPLAY EQU 0x2F
-
 ; Para guardar contexto
 WTEMP   EQU 0X70
 STATUST EQU 0X71
@@ -140,21 +137,18 @@ MAIN:
     BSF         T1CON,0             
 ; --------------------------------------------
 MAIN_LOOP:                  ; -- Loop Principal
-    BTFSC       INGRESAR,0
-    CALL        TECLADO
-    BTFSC       INGRESAR,0
-    GOTO        MAIN_LOOP
-    BTFSC       FLAG,0
-    GOTO        INICIAR_ADC
-
-    ; --- Control estricto del LED ---
-    BCF         PORTE,RE1           ; Apaga el LED siempre antes de comparar
-    MOVF        TEMPREF,W
-    SUBWF       TEMPACTUAL,W        ; W = TEMPACTUAL - TEMPREF
-    BTFSC       STATUS,C            ; Si TEMPACTUAL >= TEMPREF
-    BTFSS       STATUS,Z            ; Y TEMPACTUAL != TEMPREF (es decir, TEMPACTUAL > TEMPREF)
-    BSF         PORTE,RE1           ; Prende el LED solo si TEMPACTUAL > TEMPREF
-
+    BTFSC       INGRESAR,0  ; Si está esperando ingreso de número
+    CALL        TECLADO		    ; Llama a la rutina de teclado
+    BTFSC       INGRESAR,0      ; Si sigue esperando ingreso, no hace nada más
+    GOTO        MAIN_LOOP   
+    BTFSC	FLAG,0          ; Si pasó 1 segundo, inicio conversión ADC
+    GOTO        INICIAR_ADC     ; Si no pasó 1 segundo, sigue
+    MOVF        TEMPREF,W       ; Comparación de temperatura actual con la temperatura de referencia para prender el led
+    SUBWF       TEMPACTUAL,W
+    BTFSC       STATUS,C	    ; Si TEMPACTUAL >= TEMPREF
+    BSF         PORTE,RE1	    ; Enciende LED
+    BTFSS       STATUS,C
+    BCF         PORTE,RE1
     GOTO        MAIN_LOOP
 
 INICIAR_ADC:    ; Iniciar conversión del ADC
@@ -200,8 +194,6 @@ TECLADO_SEGUNDO_DIGITO:
     MOVWF       TEMPREF
     MOVF        WREG_TEMP, W
     IORWF       TEMPREF, F      ; Insertar unidad en nibble inferior
-    MOVF        TEMPREF, W      ; Mostrar TEMPREF en display tras ingreso
-    MOVWF       VALOR_DISPLAY
     CALL        ACTUALIZAR_DISPLAY
     BCF         INGRESAR, 0
     BCF         INGRESAR, 1
@@ -287,7 +279,7 @@ TECLAS:
     ; Eliminado el índice 12, ya que solo hay 12 teclas en 4x3
 ;----------------------------------------------------------
 ACTUALIZAR_DISPLAY: ;Subrutina del display
-    MOVF        VALOR_DISPLAY, W    ; Mostrar el valor seleccionado
+    MOVF        TEMPACTUAL, W ; o TEMPREF
     MOVWF       WREG_TEMP
     MOVLW       .10
     MOVWF       WREG_TEMP2
@@ -389,9 +381,7 @@ ISR_ADC:    ; Atiende la interrupcion del ADC y limpia la bandera correspondient
     BANKSEL     ADRESH
     MOVF        ADRESH, W           ; Leemos solo ADRESH (justificado a la izquierda)
     MOVWF       TEMPACTUAL          ; Guardamos la temperatura
-    MOVF        TEMPACTUAL, W       ; Mostrar TEMPACTUAL en display tras conversión
-    MOVWF       VALOR_DISPLAY
-    CALL        ACTUALIZAR_DISPLAY  ; Cada vez que se complete una conversion del ADC se actualizan los displays
+    CALL        ACTUALIZAR_DISPLAY  ; Cada vez que se complete una conversion del ADC se actualizan los displays *(REVISAR POR LAS DUDAS)*
     BSF         FLAG,1
     GOTO        SALIR
 ; --------------------------------------------
@@ -418,5 +408,4 @@ SALIR:	    ; Restaura el contexto y retorna de la interrupción.
     END
     RETFIE
 ; --------------------------------------------
-    END
     END

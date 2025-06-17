@@ -1,0 +1,127 @@
+; PIC16F887 Configuration Bit Settings
+; Assembly source line config statements
+#include "p16f887.inc"
+
+; CONFIG1
+; __config 0x28E4
+ __CONFIG _CONFIG1, _FOSC_INTRC_NOCLKOUT & _WDTE_OFF & _PWRTE_ON & _MCLRE_ON & _CP_OFF & _CPD_OFF & _BOREN_OFF & _IESO_OFF & _FCMEN_ON & _LVP_OFF
+; CONFIG2
+; __config 0x3EFF
+ __CONFIG _CONFIG2, _BOR4V_BOR21V & _WRT_OFF
+;----------------------------------------------------------------------------------------------------------------------------------------------
+ ;Variables:
+ w_temp         EQU 0x7D ;Para guardar contexto
+ status_temp    EQU 0x7E
+ RESULTADO_ADC  EQU 0x20
+ AUX_ADC        EQU 0x21
+ AUX_ADC1       EQU 0x22
+ CONT           EQU 0x23
+ BCD_DECENAS    EQU 0x24
+ BCD_UNIDADES   EQU 0x25
+ ;CONT1          EQU 0x26
+ CONT2          EQU 0x27
+   
+ORG 0x00
+GOTO INICIO
+ORG 0x04
+GOTO ISR
+
+INICIO:
+    CLRWDT
+    BCF STATUS,RP1 ;Banco 01
+    BSF STATUS,RP0
+    
+    MOVLW b'01100000' ;Configuro al 4Mhz
+    MOVWF OSCCON 
+    BSF TRISA,0 ;Defino al AN0 como entrada
+    
+    CLRF TRISD  ;Defino el Puerto D como salidas
+    CLRF TRISE  ;Defino el Puerto E como salida para el multiplexado
+    
+    MOVLW b'11100000' ;Defino el INTCON habilito el GIE, T0IE y el PEIE
+    MOVWF INTCON
+    ;MOVLW b'10000111'
+    ;MOVWF OPTION_REG ;Defino el Preescaler a 1:256
+    
+    MOVLW b'10000000' ;Defino el resultado a la derecha con Vref+ y Vref-
+    MOVWF ADCON1
+    
+    BSF STATUS,RP1 ;Banco 3
+    MOVLW b'00000001'
+    MOVWF ANSEL    ;Coloco el AN0 como analogica lo demas como digital, incluido los RE's para el multiplexado
+    
+    BCF STATUS,RP1 ;Banco 0
+    BCF STATUS,RP0
+    MOVLW b'11000001' ;Configuro el Adcon0 FRC, ANS0 como entrada y Activo el ADC
+    MOVWF ADCON0
+    ;MOVLW .236
+    ;MOVWF TMR0 ;Cargo el TMR0 con 5ms para el multiplexado y display
+    
+    BCF PIR1,ADIF ;Limpio la Flag del ADC
+    
+    
+    BSF STATUS,RP0 ;Banco 1
+    BSF PIE1,ADIE  ;Habilito la interrupcion para el ADC
+    
+    BCF STATUS,RP0 ;Banco 0
+    MOVLW b'11111111'
+    MOVWF PORTA
+    CLRW
+    BCF STATUS,C 
+    BCF STATUS,Z
+    
+    
+    
+
+MAIN_LOOP:
+    CALL SAMPLE_TIME
+    BSF ADCON0,GO  ;Inicio la conversion
+    GOTO MAIN_LOOP
+
+
+SAMPLE_TIME: ;Delay de 12us
+    MOVLW .12
+    MOVWF CONT
+bucle:
+    NOP
+    DECFSZ CONT,F
+    GOTO bucle
+    RETURN
+
+ISR:
+    MOVWF  w_temp      ;Guarda contexto
+    SWAPF  STATUS,W          
+    MOVWF  status_temp
+    
+    BTFSC PIR1,ADIF
+    GOTO ADC
+    GOTO EXIT_INTERRUPCION
+    
+    
+ADC: 
+    BSF STATUS,RP0
+    BCF STATUS,RP1 ;Banco 01
+    BCF STATUS,C
+    RRF ADRESL,W   ;Roto hacia la derecha los bits
+    BCF STATUS,RP0 ;Banco 00
+    MOVWF RESULTADO_ADC ;Guardo en Resultado_adc
+    MOVWF AUX_ADC1  ;Y ademas en otra variable auxiliar
+    CALL DIGITOS   
+    BCF PIR1,ADIF   ;Limpio la bandera
+    GOTO EXIT_INTERRUPCION
+
+DIGITOS:
+    MOVF RESULTADO_ADC
+    MOVWF PORTD
+    RETURN
+    
+    
+EXIT_INTERRUPCION:
+    SWAPF  status_temp,W	    ; Recupera contexto
+    MOVWF  STATUS            
+    SWAPF  w_temp,F
+    SWAPF  w_temp,W          
+    RETFIE			    ; Vuelve de la interrupción
+
+        END
+    
