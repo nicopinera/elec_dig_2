@@ -134,7 +134,11 @@ MAIN:
     MOVWF       PIE1            
 
     BANKSEL     T1CON       ; -- Activo TMR1
-    BSF         T1CON,0             
+    BSF         T1CON,0         
+    
+    BANKSEL	PORTC
+    BCF		TRISC,RC3
+    BSF		PORTC,RC3
 ; --------------------------------------------
 MAIN_LOOP:                  ; -- Loop Principal
     BTFSC       INGRESAR,0  ; Si está esperando ingreso de número
