@@ -1,12 +1,12 @@
 # TP Electrónica Digital 2
 
-Trabajo Práctico de Electrónica Digital 2 utilizando el microcontrolador **PIC16F887**. El proyecto implementa los módulos de ADC y UART, multiplexación de display de 7 segmentos y lectura de teclado matricial.
+Trabajo Práctico de Electrónica Digital 2 utilizando el microcontrolador **PIC16F887**. El proyecto implementa los módulos de ADC y UART, multiplexación de display de 7 segmentos.
 
 ---
 
 ## Descripción General
 
-Este proyecto consiste en un **termómetro digital** con envío de datos por comunicación serial. Permite ingresar una temperatura de referencia mediante un teclado matricial y, utilizando un sensor LM35, mide la temperatura ambiente. Si la temperatura medida supera la referencia, se enciende un LED indicador. Además, la temperatura se muestra en un display de 2 dígitos y se envía periódicamente por UART.
+Este proyecto consiste en un **termómetro digital** con envío de datos por comunicación serial, utilizando un sensor LM35, mide la temperatura ambiente. Además, se compara la temperatura actual con una de referencia setteada por software, si la temperatura actual es mayor se muestra **"H" "I"** (High), si la temperatura es menor a la de referencia se muestra **"L" "O"** (Low) en los display 7 segmentos y se envía periódicamente por UART.
 
 ---
 
@@ -14,22 +14,19 @@ Este proyecto consiste en un **termómetro digital** con envío de datos por com
 
 - Lectura de temperatura analógica con sensor LM35 (0.01V/°C)
 - Conversión analógica-digital con el módulo ADC del PIC16F887
-- Ingreso de temperatura de referencia por teclado matricial
 - Visualización de la temperatura en dos displays de 7 segmentos multiplexados
-- Indicación visual (LED) si la temperatura supera la referencia
+- Indicación visual (LED) si esta prendido el circuito
 - Envío periódico de la temperatura por UART (RS232-TTL o USB-Serial)
-- Control de ingreso de referencia mediante pulsador
 
 ---
 
 ## Componentes Utilizados
 
 - **LM35** (sensor de temperatura)
-- **2 Displays de 7 segmentos** (ánodo común preferentemente)
+- **2 Displays de 7 segmentos** (catodo común preferentemente)
 - **PIC16F887** (microcontrolador)
 - **Conexión RS232-TTL** o adaptador **USB-Serial**
-- **Pulsador**
-- **Teclado matricial 4x4** (opcional, según diseño)
+- **Led indicador**
 
 ---
 
@@ -40,14 +37,16 @@ Para trabajar en este proyecto, asegúrate de tener instalados los siguientes pr
 - **MPLAB X IDE** (desarrollo del código del microcontrolador)
 - **Proteus** (simulación del circuito)
 - **Git** (control de versiones)
+- **PicKit 3 Programmer**
 
 ---
 
 ## Estructura del Proyecto
 
-- **Proteus**: Archivos de simulación del circuito.
-- **tp_digital2.x**: Código fuente del microcontrolador (MPLAB).
+- **Proteus**: Archivos de simulación del circuito y esquematico basico (Previo a modificaciones a la hora de implementar).
+- **MPLAB**: Códigos (MPLAB).
 - **README.md**: Información sobre el proyecto.
+- **Documentacion**: se encuentran los DataSheet necesarios e informacion util
 
 ---
 
@@ -68,9 +67,9 @@ Para trabajar en este proyecto, asegúrate de tener instalados los siguientes pr
 
 ## Funcionamiento
 
-- Al presionar el pulsador, el sistema permite ingresar una temperatura de referencia.
-- El valor ingresado se almacena y se compara continuamente con la temperatura leída por el LM35.
-- Si la temperatura medida supera la referencia, se enciende un LED.
+- Se sensa la temperatura ambiente con el LM35
+- Se convierte a digital la temperatura actual y se guarda para enviar y operar
+- Se calculan los digitos de la temperatura actual
 - La temperatura actual se muestra en los displays y se envía por UART cada segundo.
 
 ---
