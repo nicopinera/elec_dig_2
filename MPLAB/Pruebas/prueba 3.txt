@@ -1,0 +1,86 @@
+; PIC16F887 Configuration Bit Settings
+; Assembly source line config statements
+#include "p16f887.inc"
+
+; CONFIG1
+; __config 0x28E4
+ __CONFIG _CONFIG1, _FOSC_INTRC_NOCLKOUT & _WDTE_OFF & _PWRTE_ON & _MCLRE_ON & _CP_OFF & _CPD_OFF & _BOREN_OFF & _IESO_OFF & _FCMEN_ON & _LVP_OFF
+; CONFIG2
+; __config 0x3EFF
+ __CONFIG _CONFIG2, _BOR4V_BOR21V & _WRT_OFF
+;----------------------------------------------------------------------------------------------------------------------------------------------
+; Variables
+w_temp         EQU 0x7D
+status_temp    EQU 0x7E
+led_count      EQU 0x7F ; Contador para el parpadeo del LED
+led_state      EQU 0x20 ; Estado del LED
+
+    ORG 0x00
+    GOTO INICIO
+
+INICIO:
+    ; Selecciona banco 1 para ANSEL y ANSELH
+    BCF STATUS, RP1
+    BSF STATUS, RP0
+    CLRF ANSEL      ; Todos los pines de PORTA y PORTB como digitales
+    CLRF ANSELH     ; Todos los pines de PORTC y PORTD como digitales
+
+    ; Selecciona banco 0 para TRIS y puertos
+    BCF STATUS, RP0
+    CLRF TRISA      ; PORTA como salida (bus de datos)
+    CLRF TRISD      ; PORTD como salida (habilitadores)
+    CLRF TRISC      ; PORTC como salida (LED)
+
+    CLRF PORTA      ; Apaga displays
+    CLRF PORTD      ; Apaga habilitadores
+    CLRF PORTC      ; Apaga LED
+    CLRF led_count  ; Inicializa contador de LED
+    CLRF led_state  ; Inicializa estado de LED
+
+MAIN_LOOP:
+    ; Mostrar 8 en display de decenas (RD1)
+    BSF PORTD,1     ; Habilita decenas
+    BCF PORTD,0     ; Deshabilita unidades
+    MOVLW b'01111111' ; Código 8 en 7 segmentos (catodo común)
+    MOVWF PORTA
+    CALL DELAY_5MS
+    BCF PORTD,1     ; Deshabilita decenas
+
+    ; Mostrar 8 en display de unidades (RD0)
+    BSF PORTD,0     ; Habilita unidades
+    BCF PORTD,1     ; Deshabilita decenas
+    MOVLW b'01111111' ; Código 8 en 7 segmentos (catodo común)
+    MOVWF PORTA
+    CALL DELAY_5MS
+    BCF PORTD,0     ; Deshabilita unidades
+
+    ; Parpadeo LED en RC3 (más lento y visible)
+    INCF led_count, F
+    MOVF led_count, W
+    SUBLW D'100'    ; Compara led_count con 100
+    BTFSS STATUS, Z ; Si no es igual, salta
+    GOTO NO_TOGGLE
+    CLRF led_count
+    MOVF led_state, W
+    XORLW 0x01
+    MOVWF led_state
+    BTFSS led_state, 0
+    BCF PORTC, 3
+    BTFSC led_state, 0
+    BSF PORTC, 3
+NO_TOGGLE:
+    GOTO MAIN_LOOP
+
+; Rutina de retardo aproximado 5ms (ajustar si es necesario)
+DELAY_5MS:
+    MOVLW   D'200'
+    MOVWF   w_temp
+DELAY_LOOP:
+    NOP
+    NOP
+    NOP
+    DECFSZ  w_temp, f
+    GOTO    DELAY_LOOP
+    RETURN
+
+    END

@@ -1,0 +1,183 @@
+; PIC16F887 - ADC con visualización y envío UART constante
+; PORTE: Selección de display (bit 0 = unidades, bit 1 = decenas)
+; PORTD: Segmentos del display (cátodo común)
+
+#include "p16f887.inc"
+
+; CONFIGURACIÓN
+__CONFIG _CONFIG1, _FOSC_INTRC_NOCLKOUT & _WDTE_OFF & _PWRTE_ON & _MCLRE_ON & _CP_OFF & _CPD_OFF & _BOREN_OFF & _IESO_OFF & _FCMEN_ON & _LVP_OFF
+__CONFIG _CONFIG2, _BOR4V_BOR21V & _WRT_OFF
+
+; VARIABLES
+w_temp         EQU 0x7D
+status_temp    EQU 0x7E
+RESULTADO_ADC  EQU 0x20
+AUX_ADC1       EQU 0x22
+CONT           EQU 0x23
+BCD_DECENAS    EQU 0x24
+BCD_UNIDADES   EQU 0x25
+
+ORG 0x00
+GOTO INICIO
+ORG 0x04
+GOTO ISR
+
+; INICIO
+INICIO:
+    CLRWDT
+    BCF STATUS, RP1
+    BSF STATUS, RP0
+
+    MOVLW b'01100000'
+    MOVWF OSCCON
+    BSF TRISA,0         ; RA0 como entrada analógica
+
+    BCF TRISC,6          ; RC6 (TX) como salida
+    CLRF TRISD          ; PORTD salida para segmentos
+    CLRF TRISE          ; PORTE salida para multiplexado
+
+    MOVLW b'11000000'   ; GIE, PEIE
+    MOVWF INTCON
+
+    MOVLW b'10000000'   ; Justificado a la derecha
+    MOVWF ADCON1
+
+    BSF STATUS, RP1
+    MOVLW b'00000001'   ; AN0 como analógico
+    MOVWF ANSEL
+
+    ; UART: 9600 bps @ 4MHz
+    BANKSEL TXSTA
+    MOVLW   b'00100100'  ; BRGH = 1, TXEN = 1
+    MOVWF   TXSTA
+    BANKSEL SPBRG
+    MOVLW   D'25'
+    MOVWF   SPBRG
+    BANKSEL RCSTA
+    BSF     RCSTA, SPEN  ; Habilita TX/RC
+
+    BCF STATUS, RP1
+    BCF STATUS, RP0
+    MOVLW b'11000001'   ; FRC, canal 0, ADC on
+    MOVWF ADCON0
+    CLRF PORTC
+
+    BCF PIR1, ADIF
+    BSF STATUS, RP0
+    BSF PIE1, ADIE       ; Habilita interrupción ADC
+    BCF STATUS, RP0
+
+MAIN_LOOP:
+    CALL SAMPLE_TIME
+    BSF ADCON0, GO
+    GOTO MAIN_LOOP
+
+; Pequeño retardo antes del muestreo
+SAMPLE_TIME:
+    MOVLW .12
+    MOVWF CONT
+ST_LOOP:
+    NOP
+    DECFSZ CONT,F
+    GOTO ST_LOOP
+    RETURN
+
+; INTERRUPCIONES
+ISR:
+    MOVWF w_temp
+    SWAPF STATUS,W
+    MOVWF status_temp
+
+    BTFSC PIR1, ADIF
+    GOTO ADC_ISR
+    GOTO EXIT_INTERRUPCION
+
+ADC_ISR:
+    BSF STATUS, RP0
+    BCF STATUS, RP1
+    BCF STATUS,C
+    RRF ADRESL,W
+    BCF STATUS, RP0
+    MOVWF RESULTADO_ADC
+    MOVWF AUX_ADC1
+    CALL DIGITOS
+    CALL MULTIPLEX
+    CALL UART_SEND
+    BCF PIR1, ADIF
+    GOTO EXIT_INTERRUPCION
+
+; Conversión binario -> BCD
+DIGITOS:
+    CLRF BCD_DECENAS
+    CLRF BCD_UNIDADES
+    MOVLW .10
+DIV_LOOP:
+    SUBWF RESULTADO_ADC,F
+    INCF BCD_DECENAS
+    BTFSC STATUS,C
+    GOTO DIV_LOOP
+    DECF BCD_DECENAS,F
+    ADDWF RESULTADO_ADC,W
+    MOVWF BCD_UNIDADES
+    RETURN
+
+; Muestra las decenas y unidades en displays multiplexados
+MULTIPLEX:
+    ; Mostrar decenas
+    MOVF BCD_DECENAS,W
+    CALL TABLA_7SEG
+    MOVWF PORTD
+    CLRF PORTE
+    BSF PORTE,1         ; RE1 activa DECENAS
+    CALL WAIT
+
+    ; Mostrar unidades
+    MOVF BCD_UNIDADES,W
+    CALL TABLA_7SEG
+    MOVWF PORTD
+    CLRF PORTE
+    BSF PORTE,0         ; RE0 activa UNIDADES
+    CALL WAIT
+    RETURN
+
+; Tabla de segmentos
+TABLA_7SEG:
+    ADDWF PCL,F
+    RETLW 0x3F ; 0
+    RETLW 0x06 ; 1
+    RETLW 0x5B ; 2
+    RETLW 0x4F ; 3
+    RETLW 0x66 ; 4
+    RETLW 0x6D ; 5
+    RETLW 0x7D ; 6
+    RETLW 0x07 ; 7
+    RETLW 0x7F ; 8
+    RETLW 0x6F ; 9
+
+; Pequeño delay para visualización
+WAIT:
+    MOVLW .50
+    MOVWF CONT
+WAIT_LOOP:
+    NOP
+    DECFSZ CONT,F
+    GOTO WAIT_LOOP
+    RETURN
+
+; Enviar resultado del ADC por UART
+UART_SEND:
+    MOVF AUX_ADC1, W
+UART_WAIT:
+    BTFSS PIR1, TXIF
+    GOTO UART_WAIT
+    MOVWF TXREG
+    RETURN
+
+EXIT_INTERRUPCION:
+    SWAPF status_temp,W
+    MOVWF STATUS
+    SWAPF w_temp,F
+    SWAPF w_temp,W
+    RETFIE
+
+    END
