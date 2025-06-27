@@ -50,6 +50,10 @@ Para trabajar en este proyecto, asegúrate de tener instalados los siguientes pr
 
 ---
 
+![Imagen1](img/imagen1.jpeg)
+
+---
+
 ## Instrucciones de Uso
 
 1. **Clona el repositorio:**
